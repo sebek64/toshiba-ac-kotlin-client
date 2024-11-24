@@ -6,4 +6,5 @@ rootProject.name = "toshiba-ac-kotlin-client-root"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 include(
     "toshiba-ac-kotlin-client",
+    "toshiba-ac-cli",
 )
