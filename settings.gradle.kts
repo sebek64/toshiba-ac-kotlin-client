@@ -4,4 +4,6 @@ plugins {
 
 rootProject.name = "toshiba-ac-kotlin-client-root"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
-include()
+include(
+    "toshiba-ac-kotlin-client",
+)
