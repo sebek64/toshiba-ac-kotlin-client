@@ -1,0 +1,14 @@
+<configuration>
+    <appender name="console-plain" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%-26(%d{yyyy-MM-dd HH:mm:ss.SSS} [%t]) %-5p - %c{10}:%L - %m%n%xEx{50}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- do not bloat the console output with SDK logs -->
+    <logger name="com.microsoft.azure.sdk.iot.device" level="WARN"/>
+
+    <root level="INFO">
+        <appender-ref ref="console-plain"/>
+    </root>
+</configuration>
