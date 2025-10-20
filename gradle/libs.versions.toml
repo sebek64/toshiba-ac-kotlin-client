@@ -2,7 +2,7 @@
 
 [libraries]
 kotlin-logging = { group = "io.github.oshai", name = "kotlin-logging", version = "7.0.13" }
-logback-classic = { group = "ch.qos.logback", name = "logback-classic", version = "1.5.19" }
+logback-classic = { group = "ch.qos.logback", name = "logback-classic", version = "1.5.20" }
 microsoft-iot-client = { group = "com.microsoft.azure.sdk.iot", name = "iot-device-client", version = "2.5.0" }
 slf4j-api = { group = "org.slf4j", name = "slf4j-api", version = "2.0.17" }
 
