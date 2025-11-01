@@ -6,4 +6,5 @@ plugins {
 
 dependencies {
     implementation(libs.microsoft.iot.client)
+    implementation(libs.kotlinx.coroutines.core)
 }
