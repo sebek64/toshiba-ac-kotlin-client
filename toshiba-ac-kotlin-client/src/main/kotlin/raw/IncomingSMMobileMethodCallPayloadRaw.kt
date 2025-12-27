@@ -2,18 +2,18 @@ package toshibaac.client.raw
 
 public sealed interface IncomingSMMobileMethodCallPayloadRaw {
     public data class Heartbeat(
-        public val iTemp: String,
-        public val oTemp: String,
-        public val fcuTemp: String,
-        public val fcuTcjTemp: String,
-        public val fcuFanRpm: String,
-        public val cduTdTemp: String,
-        public val cduTsTemp: String,
-        public val cduTeTemp: String,
-        public val cduCompHz: String,
-        public val cduFanRpm: String,
-        public val cduPmvPulse: String,
-        public val cduIac: String,
+        public val iTemp: String?,
+        public val oTemp: String?,
+        public val fcuTemp: String?,
+        public val fcuTcjTemp: String?,
+        public val fcuFanRpm: String?,
+        public val cduTdTemp: String?,
+        public val cduTsTemp: String?,
+        public val cduTeTemp: String?,
+        public val cduCompHz: String?,
+        public val cduFanRpm: String?,
+        public val cduPmvPulse: String?,
+        public val cduIac: String?,
     ) : IncomingSMMobileMethodCallPayloadRaw
 
     public data class FCUFromAC(
