@@ -1,7 +1,11 @@
-package toshibaac.client
+package toshibaac.client.iot
 
 import kotlinx.serialization.json.Json
-import toshibaac.client.raw.IncomingSMMobileMethodCallPayloadRaw
+import toshibaac.client.FCUState
+import toshibaac.client.IncomingSMMobileMethodCall
+import toshibaac.client.IncomingSMMobileMethodCallPayload
+import toshibaac.client.OutgoingMessage
+import toshibaac.client.Temperature
 
 public class HighLevelClient private constructor(
     private val client: CloseableIoTDeviceClient,

@@ -1,4 +1,4 @@
-package toshibaac.client
+package toshibaac.client.iot
 
 import com.google.gson.GsonBuilder
 import com.microsoft.azure.sdk.iot.device.DeviceClient
@@ -7,9 +7,6 @@ import com.microsoft.azure.sdk.iot.device.Message
 import com.microsoft.azure.sdk.iot.device.twin.DirectMethodResponse
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CompletableDeferred
-import toshibaac.client.raw.IncomingSMMobileMethodCallPayloadRaw
-import toshibaac.client.raw.IncomingSMMobileMethodCallRaw
-import toshibaac.client.raw.IncomingSMMobileMethodCallUnparsed
 
 private val log = KotlinLogging.logger {}
 

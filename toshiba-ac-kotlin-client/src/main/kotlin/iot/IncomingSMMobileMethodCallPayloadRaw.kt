@@ -1,4 +1,4 @@
-package toshibaac.client.raw
+package toshibaac.client.iot
 
 internal sealed interface IncomingSMMobileMethodCallPayloadRaw {
     data class Heartbeat(

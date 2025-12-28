@@ -1,4 +1,4 @@
-package toshibaac.client.raw
+package toshibaac.client.iot
 
 internal data class IncomingSMMobileMethodCallUnparsed(
     val sourceId: String,
