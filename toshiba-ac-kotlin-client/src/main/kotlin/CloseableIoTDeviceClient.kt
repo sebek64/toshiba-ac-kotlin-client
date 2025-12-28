@@ -13,11 +13,11 @@ import toshibaac.client.raw.IncomingSMMobileMethodCallUnparsed
 
 private val log = KotlinLogging.logger {}
 
-public class CloseableIoTDeviceClient private constructor(
+internal class CloseableIoTDeviceClient private constructor(
     private val client: DeviceClient,
 ) : AutoCloseable {
-    public companion object {
-        public suspend fun create(
+    companion object {
+        suspend fun create(
             connectionInfo: ConnectionInfo,
             messageCallback: (IncomingSMMobileMethodCallUnparsed) -> Unit,
         ): CloseableIoTDeviceClient {
@@ -86,7 +86,7 @@ public class CloseableIoTDeviceClient private constructor(
         }
     }
 
-    public suspend fun sendMsg(
+    suspend fun sendMsg(
         message: String,
     ) {
         val deferred = CompletableDeferred<Unit>()

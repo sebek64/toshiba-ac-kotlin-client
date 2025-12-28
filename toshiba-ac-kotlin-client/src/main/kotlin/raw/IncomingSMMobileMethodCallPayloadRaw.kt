@@ -1,51 +1,51 @@
 package toshibaac.client.raw
 
-public sealed interface IncomingSMMobileMethodCallPayloadRaw {
-    public data class Heartbeat(
-        public val iTemp: String?,
-        public val oTemp: String?,
-        public val fcuTemp: String?,
-        public val fcuTcjTemp: String?,
-        public val fcuFanRpm: String?,
-        public val cduTdTemp: String?,
-        public val cduTsTemp: String?,
-        public val cduTeTemp: String?,
-        public val cduCompHz: String?,
-        public val cduFanRpm: String?,
-        public val cduPmvPulse: String?,
-        public val cduIac: String?,
+internal sealed interface IncomingSMMobileMethodCallPayloadRaw {
+    data class Heartbeat(
+        val iTemp: String?,
+        val oTemp: String?,
+        val fcuTemp: String?,
+        val fcuTcjTemp: String?,
+        val fcuFanRpm: String?,
+        val cduTdTemp: String?,
+        val cduTsTemp: String?,
+        val cduTeTemp: String?,
+        val cduCompHz: String?,
+        val cduFanRpm: String?,
+        val cduPmvPulse: String?,
+        val cduIac: String?,
     ) : IncomingSMMobileMethodCallPayloadRaw
 
-    public data class FCUFromAC(
-        public val data: String,
+    data class FCUFromAC(
+        val data: String,
     ) : IncomingSMMobileMethodCallPayloadRaw
 
-    public data class SetScheduleFromAC(
-        public val programSetting: ProgramSetting,
-        public val schedulerStatus: String,
-        public val dstStatus: String,
-        public val dst: DST,
+    data class SetScheduleFromAC(
+        val programSetting: ProgramSetting,
+        val schedulerStatus: String,
+        val dstStatus: String,
+        val dst: DST,
     ) : IncomingSMMobileMethodCallPayloadRaw {
-        public data class ProgramSetting(
-            public val Sunday: Program,
-            public val Monday: Program,
-            public val Tuesday: Program,
-            public val Wednesday: Program,
-            public val Thursday: Program,
-            public val Friday: Program,
-            public val Saturday: Program,
+        data class ProgramSetting(
+            val Sunday: Program,
+            val Monday: Program,
+            val Tuesday: Program,
+            val Wednesday: Program,
+            val Thursday: Program,
+            val Friday: Program,
+            val Saturday: Program,
         ) {
-            public data class Program(
-                public val p1: String,
-                public val p2: String,
-                public val p3: String,
-                public val p4: String,
+            data class Program(
+                val p1: String,
+                val p2: String,
+                val p3: String,
+                val p4: String,
             )
         }
 
-        public data class DST(
-            public val Time: String,
-            public val Status: String,
+        data class DST(
+            val Time: String,
+            val Status: String,
         )
     }
 }
