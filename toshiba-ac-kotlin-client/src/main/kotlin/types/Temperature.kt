@@ -3,7 +3,7 @@ package toshibaac.client.types
 @JvmInline
 public value class Temperature(public val value: Int) {
     internal companion object {
-        fun fromRaw(raw: String?): Temperature? = raw?.let { fromRaw(it.toByte()) }
+        fun fromRaw(raw: String?): Temperature? = raw?.let { fromRaw(it.toUByte(16).toByte()) }
 
         fun fromRaw(raw: Byte): Temperature? = if (raw == 126.toByte()) {
             Temperature(-1)
