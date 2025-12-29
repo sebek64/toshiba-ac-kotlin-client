@@ -7,6 +7,8 @@ import com.microsoft.azure.sdk.iot.device.twin.DirectMethodResponse
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.serialization.json.Json
+import toshibaac.api.iot.IncomingSMMobileMethodCallRaw
+import toshibaac.api.iot.OutgoingMessage
 import toshibaac.client.types.FCUState
 import toshibaac.client.types.Temperature
 

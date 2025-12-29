@@ -1,4 +1,4 @@
-package toshibaac.client.iot
+package toshibaac.api.iot
 
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
