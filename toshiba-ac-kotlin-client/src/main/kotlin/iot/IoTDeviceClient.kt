@@ -36,23 +36,28 @@ public class IoTDeviceClient private constructor(
             val ready = CompletableDeferred<IoTDeviceClient>()
             client.subscribeToMethodsAsync(
                 { name, payload, _ ->
-                    if (name != "smmobile") {
-                        log.warn { "Unknown method call $name with payload ${payload.payloadAsJsonString}" }
-                        return@subscribeToMethodsAsync DirectMethodResponse(404, null)
+                    try {
+                        if (name != "smmobile") {
+                            log.warn { "Unknown method call $name with payload ${payload.payloadAsJsonString}" }
+                            return@subscribeToMethodsAsync DirectMethodResponse(404, null)
+                        }
+                        val payloadStr = payload.payloadAsJsonString
+                        log.info { "Received method call with payload $payloadStr" }
+                        val parsedPayload = json.decodeFromString<IncomingSMMobileMethodCallRaw>(payloadStr)
+                        messageCallback(
+                            IncomingSMMobileMethodCall(
+                                sourceId = parsedPayload.sourceId,
+                                messageId = parsedPayload.messageId,
+                                targetId = parsedPayload.targetId,
+                                payload = parsedPayload.parse(),
+                                timeStamp = parsedPayload.timeStamp,
+                            ),
+                        )
+                        DirectMethodResponse(200, null)
+                    } catch (e: Exception) {
+                        log.error(e) { "Error processing method call $name" }
+                        DirectMethodResponse(500, null)
                     }
-                    val payloadStr = payload.payloadAsJsonString
-                    log.info { "Received method call with payload $payloadStr" }
-                    val parsedPayload = json.decodeFromString<IncomingSMMobileMethodCallRaw>(payloadStr)
-                    messageCallback(
-                        IncomingSMMobileMethodCall(
-                            sourceId = parsedPayload.sourceId,
-                            messageId = parsedPayload.messageId,
-                            targetId = parsedPayload.targetId,
-                            payload = parsedPayload.parse(),
-                            timeStamp = parsedPayload.timeStamp,
-                        ),
-                    )
-                    DirectMethodResponse(200, null)
                 },
                 null,
                 { exception, _ ->
