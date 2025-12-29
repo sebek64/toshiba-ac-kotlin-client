@@ -8,8 +8,8 @@ import com.microsoft.azure.sdk.iot.device.twin.DirectMethodResponse
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.serialization.json.Json
-import toshibaac.client.FCUState
-import toshibaac.client.Temperature
+import toshibaac.client.types.FCUState
+import toshibaac.client.types.Temperature
 
 private val log = KotlinLogging.logger {}
 

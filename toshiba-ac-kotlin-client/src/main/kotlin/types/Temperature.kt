@@ -1,4 +1,4 @@
-package toshibaac.client
+package toshibaac.client.types
 
 @JvmInline
 public value class Temperature(public val value: Int) {

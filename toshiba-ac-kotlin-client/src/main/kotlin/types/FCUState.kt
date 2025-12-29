@@ -1,4 +1,4 @@
-package toshibaac.client
+package toshibaac.client.types
 
 @OptIn(ExperimentalStdlibApi::class)
 public data class FCUState(

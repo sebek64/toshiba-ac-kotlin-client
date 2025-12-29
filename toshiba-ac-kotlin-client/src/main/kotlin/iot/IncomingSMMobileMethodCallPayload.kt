@@ -1,7 +1,7 @@
 package toshibaac.client.iot
 
-import toshibaac.client.FCUState
-import toshibaac.client.Temperature
+import toshibaac.client.types.FCUState
+import toshibaac.client.types.Temperature
 
 public sealed interface IncomingSMMobileMethodCallPayload {
     public data class Heartbeat(
