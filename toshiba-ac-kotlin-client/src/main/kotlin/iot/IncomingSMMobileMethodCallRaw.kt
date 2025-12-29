@@ -1,4 +1,4 @@
-package toshibaac.client.raw
+package toshibaac.client.iot
 
 import com.google.gson.JsonElement
 

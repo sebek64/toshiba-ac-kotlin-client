@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalStdlibApi::class)
 
-package toshibaac.client
+package toshibaac.client.types
 
 public class ProgramEntry(
     public val hours: Hours,
