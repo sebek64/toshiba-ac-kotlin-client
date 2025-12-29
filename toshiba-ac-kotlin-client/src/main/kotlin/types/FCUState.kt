@@ -23,8 +23,8 @@ public data class FCUState(
     // off-timer hours
     // off-timer minutes
 ) {
-    public companion object {
-        public fun from(str: String): FCUState {
+    internal companion object {
+        fun from(str: String): FCUState {
             val bytes = str.hexToByteArray()
             return FCUState(
                 acStatus = when (bytes[0]) {
@@ -117,7 +117,7 @@ public data class FCUState(
         }
     }
 
-    public val asHexString: String
+    internal val asHexString: String
         get() = byteArrayOf(
             when (acStatus) {
                 ACStatus.ON -> 0x30.toByte()
@@ -201,73 +201,4 @@ public data class FCUState(
             0xff.toByte(),
             0xff.toByte(),
         ).toHexString()
-}
-
-public enum class ACStatus {
-    ON,
-    OFF,
-}
-
-public enum class ACMode {
-    AUTO,
-    COOL,
-    HEAT,
-    DRY,
-    FAN,
-}
-
-public enum class FanMode {
-    AUTO,
-    QUIET,
-    LOW,
-    MEDIUM_LOW,
-    MEDIUM,
-    MEDIUM_HIGH,
-    HIGH,
-}
-
-public enum class SwingMode {
-    OFF,
-    VERTICAL,
-    HORIZONTAL,
-    BOTH,
-    FIXED_1,
-    FIXED_2,
-    FIXED_3,
-    FIXED_4,
-    FIXED_5,
-}
-
-public enum class PowerMode {
-    POWER_50,
-    POWER_75,
-    POWER_100,
-}
-
-public enum class MeritBMode {
-    FIREPLACE_1,
-    FIREPLACE_2,
-    OFF,
-}
-
-public enum class MeritAMode {
-    HIGH_POWER,
-    CDU_SILENT_1,
-    ECO,
-    HEATING_8C,
-    SLEEP_CARE,
-    FLOOR,
-    COMFORT,
-    CDU_SILENT_2,
-    OFF,
-}
-
-public enum class PureIonMode {
-    OFF,
-    ON,
-}
-
-public enum class SelfCleaningMode {
-    OFF,
-    ON,
 }
