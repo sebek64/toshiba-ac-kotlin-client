@@ -5,12 +5,10 @@ public value class Temperature(public val value: Int) {
     internal companion object {
         fun fromRaw(raw: String?): Temperature? = raw?.let { fromRaw(it.toUByte(16).toByte()) }
 
-        fun fromRaw(raw: Byte): Temperature? = if (raw == 126.toByte()) {
-            Temperature(-1)
-        } else if (raw == (-128).toByte() || raw == 127.toByte() || raw == (-1).toByte()) {
-            null
-        } else {
-            Temperature(raw.toInt())
+        fun fromRaw(raw: Byte): Temperature? = when (raw) {
+            126.toByte() -> Temperature(-1)
+            (-128).toByte(), 127.toByte(), (-1).toByte() -> null
+            else -> Temperature(raw.toInt())
         }
     }
 
