@@ -8,5 +8,4 @@ dependencies {
     implementation(projects.api)
     implementation(libs.microsoft.iot.client)
     implementation(libs.kotlinx.coroutines.core)
-    implementation(libs.kotlinx.serialization.json)
 }

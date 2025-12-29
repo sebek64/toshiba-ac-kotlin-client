@@ -6,7 +6,6 @@ import com.microsoft.azure.sdk.iot.device.Message
 import com.microsoft.azure.sdk.iot.device.twin.DirectMethodResponse
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.serialization.json.Json
 import toshibaac.api.iot.IncomingSMMobileMethodCallRaw
 import toshibaac.api.iot.OutgoingMessage
 import toshibaac.client.types.FCUState
@@ -16,7 +15,6 @@ private val log = KotlinLogging.logger {}
 
 public class IoTDeviceClient private constructor(
     private val client: DeviceClient,
-    private val json: Json,
 ) : AutoCloseable {
     public companion object {
         public suspend fun create(
@@ -32,9 +30,6 @@ public class IoTDeviceClient private constructor(
                 IotHubClientProtocol.AMQPS,
             )
             client.open(false)
-            val json = Json {
-                ignoreUnknownKeys = true
-            }
             val ready = CompletableDeferred<IoTDeviceClient>()
             client.subscribeToMethodsAsync(
                 { name, payload, _ ->
@@ -45,7 +40,7 @@ public class IoTDeviceClient private constructor(
                         }
                         val payloadStr = payload.payloadAsJsonString
                         log.info { "Received method call with payload $payloadStr" }
-                        val parsedPayload = json.decodeFromString<IncomingSMMobileMethodCallRaw>(payloadStr)
+                        val parsedPayload = IncomingSMMobileMethodCallRaw.deserialize(payloadStr)
                         messageCallback(
                             IncomingSMMobileMethodCall(
                                 sourceId = parsedPayload.sourceId,
@@ -68,7 +63,6 @@ public class IoTDeviceClient private constructor(
                     }
                     val deviceClient = IoTDeviceClient(
                         client = client,
-                        json = json,
                     )
                     ready.complete(deviceClient)
                 },
@@ -81,7 +75,7 @@ public class IoTDeviceClient private constructor(
     private suspend fun sendMsg(
         message: OutgoingMessage,
     ) {
-        val msgStr = json.encodeToString<OutgoingMessage>(message)
+        val msgStr = message.serialize()
         val deferred = CompletableDeferred<Unit>()
         client.sendEventAsync(
             Message(msgStr).also { message ->

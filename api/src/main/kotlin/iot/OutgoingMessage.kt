@@ -4,6 +4,7 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonClassDiscriminator
+import toshibaac.api.jsonSerializer
 
 @OptIn(ExperimentalSerializationApi::class)
 @Serializable
@@ -28,4 +29,6 @@ public sealed interface OutgoingMessage {
             val data: String,
         )
     }
+
+    public fun serialize(): String = jsonSerializer.encodeToString(this)
 }

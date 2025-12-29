@@ -4,11 +4,16 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonClassDiscriminator
+import toshibaac.api.jsonSerializer
 
 @OptIn(ExperimentalSerializationApi::class)
 @Serializable
 @JsonClassDiscriminator("cmd")
 public sealed interface IncomingSMMobileMethodCallRaw {
+    public companion object {
+        public fun deserialize(str: String): IncomingSMMobileMethodCallRaw = jsonSerializer.decodeFromString(str)
+    }
+
     public val sourceId: String
     public val messageId: String
     public val targetId: List<String>
