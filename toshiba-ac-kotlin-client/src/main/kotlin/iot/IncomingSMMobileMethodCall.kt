@@ -1,4 +1,4 @@
-package toshibaac.client
+package toshibaac.client.iot
 
 public data class IncomingSMMobileMethodCall(
     public val sourceId: String,

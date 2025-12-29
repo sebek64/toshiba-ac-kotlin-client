@@ -9,9 +9,6 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.serialization.json.Json
 import toshibaac.client.FCUState
-import toshibaac.client.IncomingSMMobileMethodCall
-import toshibaac.client.IncomingSMMobileMethodCallPayload
-import toshibaac.client.OutgoingMessage
 import toshibaac.client.Temperature
 
 private val log = KotlinLogging.logger {}
