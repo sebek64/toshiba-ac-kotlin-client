@@ -1,6 +1,5 @@
 package toshibaac.client.iot
 
-import com.google.gson.GsonBuilder
 import com.microsoft.azure.sdk.iot.device.DeviceClient
 import com.microsoft.azure.sdk.iot.device.IotHubClientProtocol
 import com.microsoft.azure.sdk.iot.device.Message
@@ -15,6 +14,7 @@ private val log = KotlinLogging.logger {}
 
 public class IoTDeviceClient private constructor(
     private val client: DeviceClient,
+    private val json: Json,
 ) : AutoCloseable {
     public companion object {
         public suspend fun create(
@@ -30,45 +30,34 @@ public class IoTDeviceClient private constructor(
                 IotHubClientProtocol.AMQPS,
             )
             client.open(false)
+            val json = Json {
+                ignoreUnknownKeys = true
+            }
             val ready = CompletableDeferred<IoTDeviceClient>()
             client.subscribeToMethodsAsync(
                 { name, payload, _ ->
-                    if (name != "smmobile") {
-                        log.warn { "Unknown method call $name with payload ${payload.payloadAsJsonElement}" }
-                        return@subscribeToMethodsAsync DirectMethodResponse(404, null)
+                    try {
+                        if (name != "smmobile") {
+                            log.warn { "Unknown method call $name with payload ${payload.payloadAsJsonString}" }
+                            return@subscribeToMethodsAsync DirectMethodResponse(404, null)
+                        }
+                        val payloadStr = payload.payloadAsJsonString
+                        log.info { "Received method call with payload $payloadStr" }
+                        val parsedPayload = json.decodeFromString<IncomingSMMobileMethodCallRaw>(payloadStr)
+                        messageCallback(
+                            IncomingSMMobileMethodCall(
+                                sourceId = parsedPayload.sourceId,
+                                messageId = parsedPayload.messageId,
+                                targetId = parsedPayload.targetId,
+                                payload = parsedPayload.parse(),
+                                timeStamp = parsedPayload.timeStamp,
+                            ),
+                        )
+                        DirectMethodResponse(200, null)
+                    } catch (e: Exception) {
+                        log.error(e) { "Error processing method call $name" }
+                        DirectMethodResponse(500, null)
                     }
-                    val parsedToplevel = payload.getPayload(IncomingSMMobileMethodCallRaw::class.java)
-                    val parsedPayload = when (parsedToplevel.cmd) {
-                        "CMD_SET_SCHEDULE_FROM_AC" -> {
-                            GsonBuilder().create()
-                                .fromJson(parsedToplevel.payload, IncomingSMMobileMethodCallPayloadRaw.SetScheduleFromAC::class.java)
-                        }
-
-                        "CMD_FCU_FROM_AC" -> {
-                            GsonBuilder().create().fromJson(parsedToplevel.payload, IncomingSMMobileMethodCallPayloadRaw.FCUFromAC::class.java)
-                        }
-
-                        "CMD_HEARTBEAT" -> {
-                            GsonBuilder().create().fromJson(parsedToplevel.payload, IncomingSMMobileMethodCallPayloadRaw.Heartbeat::class.java)
-                        }
-
-                        else -> {
-                            log.warn { "Unknown method call payload ${parsedToplevel.cmd}" }
-                            return@subscribeToMethodsAsync DirectMethodResponse(400, null)
-                        }
-                    }
-                    messageCallback(
-                        IncomingSMMobileMethodCall(
-                            sourceId = parsedToplevel.sourceId,
-                            messageId = parsedToplevel.messageId,
-                            targetId = parsedToplevel.targetId,
-                            payload = parsedPayload.parse(),
-                            timeStamp = parsedToplevel.timeStamp,
-                            timeZone = parsedToplevel.timeZone,
-                            fcuTime = parsedToplevel.fcuTime,
-                        ),
-                    )
-                    DirectMethodResponse(200, null)
                 },
                 null,
                 { exception, _ ->
@@ -77,6 +66,7 @@ public class IoTDeviceClient private constructor(
                     }
                     val deviceClient = IoTDeviceClient(
                         client = client,
+                        json = json,
                     )
                     ready.complete(deviceClient)
                 },
@@ -89,7 +79,7 @@ public class IoTDeviceClient private constructor(
     private suspend fun sendMsg(
         message: OutgoingMessage,
     ) {
-        val msgStr = Json.encodeToString<OutgoingMessage>(message)
+        val msgStr = json.encodeToString<OutgoingMessage>(message)
         val deferred = CompletableDeferred<Unit>()
         client.sendEventAsync(
             Message(msgStr).also { message ->
@@ -114,76 +104,76 @@ public class IoTDeviceClient private constructor(
     }
 }
 
-private fun IncomingSMMobileMethodCallPayloadRaw.parse() = when (val unparsedPayload = this) {
-    is IncomingSMMobileMethodCallPayloadRaw.FCUFromAC -> IncomingSMMobileMethodCallPayload.FCUFromAC(
-        data = FCUState.from(unparsedPayload.data),
+private fun IncomingSMMobileMethodCallRaw.parse() = when (val unparsedCall = this) {
+    is IncomingSMMobileMethodCallRaw.FCUFromAC -> IncomingSMMobileMethodCallPayload.FCUFromAC(
+        data = FCUState.from(unparsedCall.payload.data),
     )
 
-    is IncomingSMMobileMethodCallPayloadRaw.Heartbeat -> IncomingSMMobileMethodCallPayload.Heartbeat(
-        iTemp = Temperature.fromRaw(unparsedPayload.iTemp),
-        oTemp = Temperature.fromRaw(unparsedPayload.oTemp),
-        fcuTemp = Temperature.fromRaw(unparsedPayload.fcuTemp),
-        fcuTcjTemp = Temperature.fromRaw(unparsedPayload.fcuTcjTemp),
-        fcuFanRpm = unparsedPayload.fcuFanRpm,
-        cduTdTemp = Temperature.fromRaw(unparsedPayload.cduTdTemp),
-        cduTsTemp = Temperature.fromRaw(unparsedPayload.cduTsTemp),
-        cduTeTemp = Temperature.fromRaw(unparsedPayload.cduTeTemp),
-        cduCompHz = unparsedPayload.cduCompHz,
-        cduFanRpm = unparsedPayload.cduFanRpm,
-        cduPmvPulse = unparsedPayload.cduPmvPulse,
-        cduIac = unparsedPayload.cduIac,
+    is IncomingSMMobileMethodCallRaw.Heartbeat -> IncomingSMMobileMethodCallPayload.Heartbeat(
+        iTemp = Temperature.fromRaw(unparsedCall.payload.iTemp),
+        oTemp = Temperature.fromRaw(unparsedCall.payload.oTemp),
+        fcuTcTemp = Temperature.fromRaw(unparsedCall.payload.fcuTcTemp),
+        fcuTcjTemp = Temperature.fromRaw(unparsedCall.payload.fcuTcjTemp),
+        fcuFanRpm = unparsedCall.payload.fcuFanRpm,
+        cduTdTemp = Temperature.fromRaw(unparsedCall.payload.cduTdTemp),
+        cduTsTemp = Temperature.fromRaw(unparsedCall.payload.cduTsTemp),
+        cduTeTemp = Temperature.fromRaw(unparsedCall.payload.cduTeTemp),
+        cduCompHz = unparsedCall.payload.cduCompHz,
+        cduFanRpm = unparsedCall.payload.cduFanRpm,
+        cduPmvPulse = unparsedCall.payload.cduPmvPulse,
+        cduIac = unparsedCall.payload.cduIac,
     )
 
-    is IncomingSMMobileMethodCallPayloadRaw.SetScheduleFromAC -> IncomingSMMobileMethodCallPayload.SetScheduleFromAC(
+    is IncomingSMMobileMethodCallRaw.SetScheduleFromAC -> IncomingSMMobileMethodCallPayload.SetScheduleFromAC(
         programSetting = IncomingSMMobileMethodCallPayload.SetScheduleFromAC.ProgramSetting(
             sunday = IncomingSMMobileMethodCallPayload.SetScheduleFromAC.ProgramSetting.Program(
-                p1 = unparsedPayload.programSetting.Sunday.p1,
-                p2 = unparsedPayload.programSetting.Sunday.p2,
-                p3 = unparsedPayload.programSetting.Sunday.p3,
-                p4 = unparsedPayload.programSetting.Sunday.p4,
+                p1 = unparsedCall.payload.programSetting.Sunday.p1,
+                p2 = unparsedCall.payload.programSetting.Sunday.p2,
+                p3 = unparsedCall.payload.programSetting.Sunday.p3,
+                p4 = unparsedCall.payload.programSetting.Sunday.p4,
             ),
             monday = IncomingSMMobileMethodCallPayload.SetScheduleFromAC.ProgramSetting.Program(
-                p1 = unparsedPayload.programSetting.Monday.p1,
-                p2 = unparsedPayload.programSetting.Monday.p2,
-                p3 = unparsedPayload.programSetting.Monday.p3,
-                p4 = unparsedPayload.programSetting.Monday.p4,
+                p1 = unparsedCall.payload.programSetting.Monday.p1,
+                p2 = unparsedCall.payload.programSetting.Monday.p2,
+                p3 = unparsedCall.payload.programSetting.Monday.p3,
+                p4 = unparsedCall.payload.programSetting.Monday.p4,
             ),
             tuesday = IncomingSMMobileMethodCallPayload.SetScheduleFromAC.ProgramSetting.Program(
-                p1 = unparsedPayload.programSetting.Tuesday.p1,
-                p2 = unparsedPayload.programSetting.Tuesday.p2,
-                p3 = unparsedPayload.programSetting.Tuesday.p3,
-                p4 = unparsedPayload.programSetting.Tuesday.p4,
+                p1 = unparsedCall.payload.programSetting.Tuesday.p1,
+                p2 = unparsedCall.payload.programSetting.Tuesday.p2,
+                p3 = unparsedCall.payload.programSetting.Tuesday.p3,
+                p4 = unparsedCall.payload.programSetting.Tuesday.p4,
             ),
             wednesday = IncomingSMMobileMethodCallPayload.SetScheduleFromAC.ProgramSetting.Program(
-                p1 = unparsedPayload.programSetting.Wednesday.p1,
-                p2 = unparsedPayload.programSetting.Wednesday.p2,
-                p3 = unparsedPayload.programSetting.Wednesday.p3,
-                p4 = unparsedPayload.programSetting.Wednesday.p4,
+                p1 = unparsedCall.payload.programSetting.Wednesday.p1,
+                p2 = unparsedCall.payload.programSetting.Wednesday.p2,
+                p3 = unparsedCall.payload.programSetting.Wednesday.p3,
+                p4 = unparsedCall.payload.programSetting.Wednesday.p4,
             ),
             thursday = IncomingSMMobileMethodCallPayload.SetScheduleFromAC.ProgramSetting.Program(
-                p1 = unparsedPayload.programSetting.Thursday.p1,
-                p2 = unparsedPayload.programSetting.Thursday.p2,
-                p3 = unparsedPayload.programSetting.Thursday.p3,
-                p4 = unparsedPayload.programSetting.Thursday.p4,
+                p1 = unparsedCall.payload.programSetting.Thursday.p1,
+                p2 = unparsedCall.payload.programSetting.Thursday.p2,
+                p3 = unparsedCall.payload.programSetting.Thursday.p3,
+                p4 = unparsedCall.payload.programSetting.Thursday.p4,
             ),
             friday = IncomingSMMobileMethodCallPayload.SetScheduleFromAC.ProgramSetting.Program(
-                p1 = unparsedPayload.programSetting.Friday.p1,
-                p2 = unparsedPayload.programSetting.Friday.p2,
-                p3 = unparsedPayload.programSetting.Friday.p3,
-                p4 = unparsedPayload.programSetting.Friday.p4,
+                p1 = unparsedCall.payload.programSetting.Friday.p1,
+                p2 = unparsedCall.payload.programSetting.Friday.p2,
+                p3 = unparsedCall.payload.programSetting.Friday.p3,
+                p4 = unparsedCall.payload.programSetting.Friday.p4,
             ),
             saturday = IncomingSMMobileMethodCallPayload.SetScheduleFromAC.ProgramSetting.Program(
-                p1 = unparsedPayload.programSetting.Saturday.p1,
-                p2 = unparsedPayload.programSetting.Saturday.p2,
-                p3 = unparsedPayload.programSetting.Saturday.p3,
-                p4 = unparsedPayload.programSetting.Saturday.p4,
+                p1 = unparsedCall.payload.programSetting.Saturday.p1,
+                p2 = unparsedCall.payload.programSetting.Saturday.p2,
+                p3 = unparsedCall.payload.programSetting.Saturday.p3,
+                p4 = unparsedCall.payload.programSetting.Saturday.p4,
             ),
         ),
-        schedulerStatus = unparsedPayload.schedulerStatus,
-        dstStatus = unparsedPayload.dstStatus,
+        schedulerStatus = unparsedCall.payload.schedulerStatus,
+        dstStatus = unparsedCall.payload.dstStatus,
         dst = IncomingSMMobileMethodCallPayload.SetScheduleFromAC.DST(
-            time = unparsedPayload.dst.Time,
-            status = unparsedPayload.dst.Status,
+            time = unparsedCall.payload.dst.Time,
+            status = unparsedCall.payload.dst.Status,
         ),
     )
 }

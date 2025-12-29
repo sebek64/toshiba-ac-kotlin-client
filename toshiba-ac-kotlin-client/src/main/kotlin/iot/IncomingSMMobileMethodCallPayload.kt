@@ -7,7 +7,7 @@ public sealed interface IncomingSMMobileMethodCallPayload {
     public data class Heartbeat(
         public val iTemp: Temperature?,
         public val oTemp: Temperature?,
-        public val fcuTemp: Temperature?,
+        public val fcuTcTemp: Temperature?,
         public val fcuTcjTemp: Temperature?,
         public val fcuFanRpm: String?,
         public val cduTdTemp: Temperature?,
