@@ -61,15 +61,15 @@ public class IoTDeviceClient private constructor(
                         }
                     }
                     messageCallback(
-                        IncomingSMMobileMethodCallUnparsed(
+                        IncomingSMMobileMethodCall(
                             sourceId = parsedToplevel.sourceId,
                             messageId = parsedToplevel.messageId,
                             targetId = parsedToplevel.targetId,
-                            payload = parsedPayload,
+                            payload = parsedPayload.parse(),
                             timeStamp = parsedToplevel.timeStamp,
                             timeZone = parsedToplevel.timeZone,
                             fcuTime = parsedToplevel.fcuTime,
-                        ).parse(),
+                        ),
                     )
                     DirectMethodResponse(200, null)
                 },
@@ -116,16 +116,6 @@ public class IoTDeviceClient private constructor(
         client.close()
     }
 }
-
-private fun IncomingSMMobileMethodCallUnparsed.parse() = IncomingSMMobileMethodCall(
-    sourceId = sourceId,
-    messageId = messageId,
-    targetId = targetId,
-    timeStamp = timeStamp,
-    timeZone = timeZone,
-    fcuTime = fcuTime,
-    payload = payload.parse(),
-)
 
 private fun IncomingSMMobileMethodCallPayloadRaw.parse() = when (val unparsedPayload = this) {
     is IncomingSMMobileMethodCallPayloadRaw.FCUFromAC -> IncomingSMMobileMethodCallPayload.FCUFromAC(
