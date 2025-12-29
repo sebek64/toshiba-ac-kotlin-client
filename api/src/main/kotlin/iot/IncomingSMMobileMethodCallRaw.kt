@@ -1,26 +1,31 @@
-package toshibaac.client.iot
+package toshibaac.api.iot
 
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonClassDiscriminator
+import toshibaac.api.jsonSerializer
 
 @OptIn(ExperimentalSerializationApi::class)
 @Serializable
 @JsonClassDiscriminator("cmd")
-internal sealed interface IncomingSMMobileMethodCallRaw {
-    val sourceId: String
-    val messageId: String
-    val targetId: List<String>
-    val timeStamp: String
-    val payload: Any
+public sealed interface IncomingSMMobileMethodCallRaw {
+    public companion object {
+        public fun deserialize(str: String): IncomingSMMobileMethodCallRaw = jsonSerializer.decodeFromString(str)
+    }
+
+    public val sourceId: String
+    public val messageId: String
+    public val targetId: List<String>
+    public val timeStamp: String
+    public val payload: Any
     // TODO: receiving nulls only, not sure about correct type
-    // val timeZone: Any?,
-    // val fcuTime: Any?,
+    // public val timeZone: Any?,
+    // public val fcuTime: Any?,
 
     @Serializable
     @SerialName("CMD_HEARTBEAT")
-    data class Heartbeat(
+    public data class Heartbeat(
         override val sourceId: String,
         override val messageId: String,
         override val targetId: List<String>,
@@ -28,7 +33,7 @@ internal sealed interface IncomingSMMobileMethodCallRaw {
         override val payload: Payload,
     ) : IncomingSMMobileMethodCallRaw {
         @Serializable
-        data class Payload(
+        public data class Payload(
             val iTemp: String?,
             val oTemp: String?,
             val fcuTcTemp: String?,
@@ -46,7 +51,7 @@ internal sealed interface IncomingSMMobileMethodCallRaw {
 
     @Serializable
     @SerialName("CMD_FCU_FROM_AC")
-    data class FCUFromAC(
+    public data class FCUFromAC(
         override val sourceId: String,
         override val messageId: String,
         override val targetId: List<String>,
@@ -54,14 +59,14 @@ internal sealed interface IncomingSMMobileMethodCallRaw {
         override val payload: Payload,
     ) : IncomingSMMobileMethodCallRaw {
         @Serializable
-        data class Payload(
+        public data class Payload(
             val data: String,
         )
     }
 
     @Serializable
     @SerialName("CMD_SET_SCHEDULE_FROM_AC")
-    data class SetScheduleFromAC(
+    public data class SetScheduleFromAC(
         override val sourceId: String,
         override val messageId: String,
         override val targetId: List<String>,
@@ -69,14 +74,14 @@ internal sealed interface IncomingSMMobileMethodCallRaw {
         override val payload: Payload,
     ) : IncomingSMMobileMethodCallRaw {
         @Serializable
-        data class Payload(
+        public data class Payload(
             val programSetting: ProgramSetting,
             val schedulerStatus: String,
             val dstStatus: String,
             val dst: DST,
         ) {
             @Serializable
-            data class ProgramSetting(
+            public data class ProgramSetting(
                 val Sunday: Program,
                 val Monday: Program,
                 val Tuesday: Program,
@@ -86,7 +91,7 @@ internal sealed interface IncomingSMMobileMethodCallRaw {
                 val Saturday: Program,
             ) {
                 @Serializable
-                data class Program(
+                public data class Program(
                     val p1: String,
                     val p2: String,
                     val p3: String,
@@ -95,7 +100,7 @@ internal sealed interface IncomingSMMobileMethodCallRaw {
             }
 
             @Serializable
-            data class DST(
+            public data class DST(
                 val Time: String,
                 val Status: String,
             )
