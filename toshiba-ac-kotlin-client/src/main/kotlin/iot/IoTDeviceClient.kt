@@ -107,7 +107,7 @@ private fun IncomingSMMobileMethodCallRaw.parse() = when (val unparsedCall = thi
     is IncomingSMMobileMethodCallRaw.Heartbeat -> IncomingSMMobileMethodCallPayload.Heartbeat(
         iTemp = Temperature.fromRaw(unparsedCall.payload.iTemp),
         oTemp = Temperature.fromRaw(unparsedCall.payload.oTemp),
-        fcuTemp = Temperature.fromRaw(unparsedCall.payload.fcuTemp),
+        fcuTcTemp = Temperature.fromRaw(unparsedCall.payload.fcuTcTemp),
         fcuTcjTemp = Temperature.fromRaw(unparsedCall.payload.fcuTcjTemp),
         fcuFanRpm = unparsedCall.payload.fcuFanRpm,
         cduTdTemp = Temperature.fromRaw(unparsedCall.payload.cduTdTemp),

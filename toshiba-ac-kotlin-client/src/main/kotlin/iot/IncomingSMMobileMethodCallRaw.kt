@@ -31,7 +31,7 @@ internal sealed interface IncomingSMMobileMethodCallRaw {
         data class Payload(
             val iTemp: String?,
             val oTemp: String?,
-            val fcuTemp: String?,
+            val fcuTcTemp: String?,
             val fcuTcjTemp: String?,
             val fcuFanRpm: String?,
             val cduTdTemp: String?,
