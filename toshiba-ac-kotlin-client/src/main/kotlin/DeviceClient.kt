@@ -6,7 +6,6 @@ import toshibaac.client.http.HttpDeviceClient
 import toshibaac.client.http.LoginResult
 import toshibaac.client.http.Password
 import toshibaac.client.http.Username
-import toshibaac.client.iot.ConnectionInfo
 import toshibaac.client.iot.IncomingSMMobileMethodCall
 import toshibaac.client.iot.IoTDeviceClient
 
@@ -56,11 +55,9 @@ public class DeviceClient private constructor(
             userName = username,
         )
         return IoTDeviceClient.create(
-            connectionInfo = ConnectionInfo(
-                hostName = registerResult.hostName,
-                deviceId = registerResult.deviceId,
-                sasToken = registerResult.sasToken,
-            ),
+            hostName = registerResult.hostName,
+            deviceId = registerResult.deviceId,
+            sasToken = registerResult.sasToken,
             messageCallback = messageCallback,
         )
     }

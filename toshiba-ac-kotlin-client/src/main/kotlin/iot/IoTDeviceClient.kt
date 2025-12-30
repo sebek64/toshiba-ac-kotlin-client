@@ -8,6 +8,9 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CompletableDeferred
 import toshibaac.api.iot.IncomingSMMobileMethodCallRaw
 import toshibaac.api.iot.OutgoingMessage
+import toshibaac.client.DeviceId
+import toshibaac.client.IoTHostName
+import toshibaac.client.IoTSasToken
 import toshibaac.client.types.FCUState
 import toshibaac.client.types.Temperature
 
@@ -18,14 +21,16 @@ public class IoTDeviceClient private constructor(
 ) : AutoCloseable {
     public companion object {
         public suspend fun create(
-            connectionInfo: ConnectionInfo,
+            hostName: IoTHostName,
+            deviceId: DeviceId,
+            sasToken: IoTSasToken,
             messageCallback: (IncomingSMMobileMethodCall) -> Unit,
         ): IoTDeviceClient {
             val client = DeviceClient(
-                connectionInfo.hostName.value,
-                connectionInfo.deviceId.value,
+                hostName.value,
+                deviceId.value,
                 {
-                    connectionInfo.sasToken.value.toCharArray()
+                    sasToken.value.toCharArray()
                 },
                 IotHubClientProtocol.AMQPS,
             )
