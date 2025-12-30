@@ -58,7 +58,7 @@ internal class HttpDeviceClient internal constructor(
             expiresIn = ExpiresIn(response.expires_in),
             consumerId = ConsumerId(response.consumerId),
             countryId = CountryId(response.countryId),
-            consumerMasterId = response.consumerMasterId,
+            consumerMasterId = ConsumerMasterId(response.consumerMasterId),
             isHeatQuantityActivated = response.isHeatQuantityActivated,
         )
     }

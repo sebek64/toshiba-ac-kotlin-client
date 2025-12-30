@@ -6,6 +6,6 @@ internal data class LoginResult(
     val expiresIn: ExpiresIn,
     val consumerId: ConsumerId,
     val countryId: CountryId,
-    val consumerMasterId: String?,
+    val consumerMasterId: ConsumerMasterId,
     val isHeatQuantityActivated: Boolean,
 )
