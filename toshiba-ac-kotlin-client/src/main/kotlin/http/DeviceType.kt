@@ -1,4 +1,4 @@
 package toshibaac.client.http
 
 @JvmInline
-public value class DeviceType(public val value: String)
+internal value class DeviceType(val value: String)

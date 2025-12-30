@@ -1,4 +1,4 @@
 package toshibaac.client.http
 
 @JvmInline
-public value class ExpiresIn(public val value: Long)
+internal value class ExpiresIn(val value: Long)

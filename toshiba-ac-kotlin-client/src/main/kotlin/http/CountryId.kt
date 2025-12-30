@@ -1,4 +1,4 @@
 package toshibaac.client.http
 
 @JvmInline
-public value class CountryId(public val value: Int)
+internal value class CountryId(val value: Int)
