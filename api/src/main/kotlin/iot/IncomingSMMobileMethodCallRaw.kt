@@ -4,6 +4,7 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonClassDiscriminator
+import kotlinx.serialization.json.JsonElement
 import toshibaac.api.jsonSerializer
 
 @OptIn(ExperimentalSerializationApi::class)
@@ -19,9 +20,8 @@ public sealed interface IncomingSMMobileMethodCallRaw {
     public val targetId: List<String>
     public val timeStamp: String
     public val payload: Any
-    // TODO: receiving nulls only, not sure about correct type
-    // public val timeZone: Any?,
-    // public val fcuTime: Any?,
+    public val timeZone: JsonElement
+    public val fcuTime: JsonElement
 
     @Serializable
     @SerialName("CMD_HEARTBEAT")
@@ -31,6 +31,8 @@ public sealed interface IncomingSMMobileMethodCallRaw {
         override val targetId: List<String>,
         override val timeStamp: String,
         override val payload: Payload,
+        override val timeZone: JsonElement,
+        override val fcuTime: JsonElement,
     ) : IncomingSMMobileMethodCallRaw {
         @Serializable
         public data class Payload(
@@ -57,6 +59,8 @@ public sealed interface IncomingSMMobileMethodCallRaw {
         override val targetId: List<String>,
         override val timeStamp: String,
         override val payload: Payload,
+        override val timeZone: JsonElement,
+        override val fcuTime: JsonElement,
     ) : IncomingSMMobileMethodCallRaw {
         @Serializable
         public data class Payload(
@@ -72,6 +76,8 @@ public sealed interface IncomingSMMobileMethodCallRaw {
         override val targetId: List<String>,
         override val timeStamp: String,
         override val payload: Payload,
+        override val timeZone: JsonElement,
+        override val fcuTime: JsonElement,
     ) : IncomingSMMobileMethodCallRaw {
         @Serializable
         public data class Payload(
