@@ -36,18 +36,18 @@ public sealed interface IncomingSMMobileMethodCallRaw {
     ) : IncomingSMMobileMethodCallRaw {
         @Serializable
         public data class Payload(
-            val iTemp: String?,
-            val oTemp: String?,
-            val fcuTcTemp: String?,
-            val fcuTcjTemp: String?,
-            val fcuFanRpm: String?,
-            val cduTdTemp: String?,
-            val cduTsTemp: String?,
-            val cduTeTemp: String?,
-            val cduCompHz: String?,
-            val cduFanRpm: String?,
-            val cduPmvPulse: String?,
-            val cduIac: String?,
+            val iTemp: String,
+            val oTemp: String,
+            val fcuTcTemp: String,
+            val fcuTcjTemp: String,
+            val fcuFanRpm: String,
+            val cduTdTemp: String,
+            val cduTsTemp: String,
+            val cduTeTemp: String,
+            val cduCompHz: String,
+            val cduFanRpm: String,
+            val cduPmvPulse: String,
+            val cduIac: String,
         )
     }
 
