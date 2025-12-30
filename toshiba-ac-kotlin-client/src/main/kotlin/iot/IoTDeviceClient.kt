@@ -14,10 +14,13 @@ import toshibaac.client.IoTHostName
 import toshibaac.client.IoTSasToken
 import toshibaac.client.types.FCUState
 import toshibaac.client.types.Temperature
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 private val log = KotlinLogging.logger {}
 
 public class IoTDeviceClient private constructor(
+    private val deviceId: DeviceId,
     private val client: DeviceClient,
 ) : AutoCloseable {
     public companion object {
@@ -60,6 +63,7 @@ public class IoTDeviceClient private constructor(
                         ready.completeExceptionally(exception)
                     }
                     val deviceClient = IoTDeviceClient(
+                        deviceId = deviceId,
                         client = client,
                     )
                     ready.complete(deviceClient)
@@ -70,9 +74,21 @@ public class IoTDeviceClient private constructor(
         }
     }
 
-    private suspend fun sendMsg(
-        message: OutgoingMessage,
+    @OptIn(ExperimentalUuidApi::class)
+    public suspend fun sendEvent(
+        outgoingEvent: OutgoingEvent,
     ) {
+        val message = when (outgoingEvent) {
+            is OutgoingEvent.SetFCUParameters -> OutgoingMessage.FCUToAC(
+                sourceId = deviceId.value,
+                messageId = Uuid.random().toString(),
+                timeStamp = "0000000",
+                targetId = outgoingEvent.targetId.map { it.value },
+                payload = OutgoingMessage.FCUToAC.Payload(
+                    data = outgoingEvent.fcuState.asHexString,
+                ),
+            )
+        }
         val msgStr = message.serialize()
         val deferred = CompletableDeferred<Unit>()
         client.sendEventAsync(
