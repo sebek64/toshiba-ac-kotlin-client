@@ -59,11 +59,7 @@ public class HttpDeviceClient internal constructor(
             consumerId = ConsumerId(response.consumerId),
             countryId = CountryId(response.countryId),
             consumerMasterId = response.consumerMasterId,
-            isHeatQuantityActivated = when (response.isHeatQuantityActivated) {
-                "False" -> false
-                "True" -> true
-                else -> error("Unknown value for isHeatQuantityActivated: ${response.isHeatQuantityActivated}")
-            },
+            isHeatQuantityActivated = response.isHeatQuantityActivated,
         )
     }
 

@@ -10,5 +10,5 @@ public data class LoginResponsePayload(
     val consumerId: String,
     val countryId: Int,
     val consumerMasterId: String,
-    val isHeatQuantityActivated: String,
+    val isHeatQuantityActivated: Boolean,
 )
