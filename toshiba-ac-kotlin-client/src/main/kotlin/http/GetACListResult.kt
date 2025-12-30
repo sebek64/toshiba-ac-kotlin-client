@@ -1,5 +1,6 @@
 package toshibaac.client.http
 
+import toshibaac.client.DeviceUniqueId
 import toshibaac.client.types.FCUState
 
 @JvmInline

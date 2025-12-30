@@ -1,4 +1,4 @@
 package toshibaac.client.http
 
 @JvmInline
-public value class ConsumerMasterId(public val value: String)
+internal value class ConsumerMasterId(val value: String)

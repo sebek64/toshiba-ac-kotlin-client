@@ -10,6 +10,7 @@ import toshibaac.api.http.LoginResponsePayload
 import toshibaac.api.http.RegisterRequest
 import toshibaac.api.http.RegisterResponsePayload
 import toshibaac.client.DeviceId
+import toshibaac.client.DeviceUniqueId
 import toshibaac.client.IoTHostName
 import toshibaac.client.IoTSasToken
 import toshibaac.client.types.FCUState
@@ -20,11 +21,11 @@ import java.net.http.HttpResponse
 
 private val log = KotlinLogging.logger {}
 
-public class HttpDeviceClient internal constructor(
+internal class HttpDeviceClient internal constructor(
     private val httpClient: HttpClient,
 ) : AutoCloseable by httpClient {
-    public companion object {
-        public fun create(): HttpDeviceClient = HttpDeviceClient(
+    companion object {
+        fun create(): HttpDeviceClient = HttpDeviceClient(
             httpClient = HttpClient.newBuilder()
                 .build(),
         )
@@ -34,7 +35,7 @@ public class HttpDeviceClient internal constructor(
         private const val AC_URL = "${BASE_URL}AC/"
     }
 
-    public suspend fun login(
+    suspend fun login(
         username: Username,
         password: Password,
     ): LoginResult {
@@ -58,12 +59,12 @@ public class HttpDeviceClient internal constructor(
             expiresIn = ExpiresIn(response.expires_in),
             consumerId = ConsumerId(response.consumerId),
             countryId = CountryId(response.countryId),
-            consumerMasterId = response.consumerMasterId,
+            consumerMasterId = ConsumerMasterId(response.consumerMasterId),
             isHeatQuantityActivated = response.isHeatQuantityActivated,
         )
     }
 
-    public suspend fun registerMobileDevice(
+    suspend fun registerMobileDevice(
         tokenType: TokenType,
         accessToken: AccessToken,
         deviceId: DeviceId,
@@ -96,7 +97,7 @@ public class HttpDeviceClient internal constructor(
         )
     }
 
-    public suspend fun getACList(
+    suspend fun getACList(
         tokenType: TokenType,
         accessToken: AccessToken,
         consumerId: ConsumerId,
