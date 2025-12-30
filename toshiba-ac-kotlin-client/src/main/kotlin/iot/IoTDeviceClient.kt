@@ -47,14 +47,7 @@ public class IoTDeviceClient private constructor(
                         val payloadStr = payload.payloadAsJsonString
                         log.info { "Received method call with payload $payloadStr" }
                         val parsedPayload = IncomingSMMobileMethodCallRaw.deserialize(payloadStr)
-                        messageCallback(
-                            parsedPayload.parse(
-                                sourceId = DeviceUniqueId(parsedPayload.sourceId),
-                                messageId = MessageId(parsedPayload.messageId),
-                                targetId = parsedPayload.targetId.map { DeviceId(it) },
-                                timeStamp = MessageTimestamp(parsedPayload.timeStamp),
-                            ),
-                        )
+                        messageCallback(parsedPayload.parse())
                         DirectMethodResponse(200, null)
                     } catch (e: Exception) {
                         log.error(e) { "Error processing method call $name" }
@@ -105,25 +98,20 @@ public class IoTDeviceClient private constructor(
     }
 }
 
-private fun IncomingSMMobileMethodCallRaw.parse(
-    sourceId: DeviceUniqueId,
-    messageId: MessageId,
-    targetId: List<DeviceId>,
-    timeStamp: MessageTimestamp,
-): IncomingEvent = when (val unparsedCall = this) {
+private fun IncomingSMMobileMethodCallRaw.parse(): IncomingEvent = when (val unparsedCall = this) {
     is IncomingSMMobileMethodCallRaw.FCUFromAC -> IncomingEvent.FCUFromAC(
-        sourceId = sourceId,
-        messageId = messageId,
-        targetId = targetId,
-        timeStamp = timeStamp,
+        sourceId = DeviceUniqueId(unparsedCall.sourceId),
+        messageId = MessageId(unparsedCall.messageId),
+        targetId = unparsedCall.targetId.map { DeviceId(it) },
+        timeStamp = MessageTimestamp(unparsedCall.timeStamp),
         data = FCUState.from(unparsedCall.payload.data),
     )
 
     is IncomingSMMobileMethodCallRaw.Heartbeat -> IncomingEvent.Heartbeat(
-        sourceId = sourceId,
-        messageId = messageId,
-        targetId = targetId,
-        timeStamp = timeStamp,
+        sourceId = DeviceUniqueId(unparsedCall.sourceId),
+        messageId = MessageId(unparsedCall.messageId),
+        targetId = unparsedCall.targetId.map { DeviceId(it) },
+        timeStamp = MessageTimestamp(unparsedCall.timeStamp),
         iTemp = Temperature.fromRaw(unparsedCall.payload.iTemp),
         oTemp = Temperature.fromRaw(unparsedCall.payload.oTemp),
         fcuTcTemp = Temperature.fromRaw(unparsedCall.payload.fcuTcTemp),
@@ -139,10 +127,10 @@ private fun IncomingSMMobileMethodCallRaw.parse(
     )
 
     is IncomingSMMobileMethodCallRaw.SetScheduleFromAC -> IncomingEvent.SetScheduleFromAC(
-        sourceId = sourceId,
-        messageId = messageId,
-        targetId = targetId,
-        timeStamp = timeStamp,
+        sourceId = DeviceUniqueId(unparsedCall.sourceId),
+        messageId = MessageId(unparsedCall.messageId),
+        targetId = unparsedCall.targetId.map { DeviceId(it) },
+        timeStamp = MessageTimestamp(unparsedCall.timeStamp),
         programSetting = IncomingEvent.SetScheduleFromAC.ProgramSetting(
             sunday = IncomingEvent.SetScheduleFromAC.ProgramSetting.Program(
                 p1 = unparsedCall.payload.programSetting.Sunday.p1,
