@@ -1,0 +1,11 @@
+package toshibaac.client.http
+
+public data class LoginResult(
+    val accessToken: AccessToken,
+    val tokenType: TokenType,
+    val expiresIn: ExpiresIn,
+    val consumerId: ConsumerId,
+    val countryId: CountryId,
+    val consumerMasterId: String?,
+    val isHeatQuantityActivated: Boolean,
+)

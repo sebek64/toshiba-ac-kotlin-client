@@ -3,8 +3,8 @@ package toshibaac.api.iot
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonClassDiscriminator
-import toshibaac.api.jsonSerializer
 
 @OptIn(ExperimentalSerializationApi::class)
 @Serializable
@@ -30,5 +30,5 @@ public sealed interface OutgoingMessage {
         )
     }
 
-    public fun serialize(): String = jsonSerializer.encodeToString(this)
+    public fun serialize(): String = Json.encodeToString(this)
 }

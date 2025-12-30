@@ -3,15 +3,16 @@ package toshibaac.api.iot
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonClassDiscriminator
-import toshibaac.api.jsonSerializer
+import kotlinx.serialization.json.JsonElement
 
 @OptIn(ExperimentalSerializationApi::class)
 @Serializable
 @JsonClassDiscriminator("cmd")
 public sealed interface IncomingSMMobileMethodCallRaw {
     public companion object {
-        public fun deserialize(str: String): IncomingSMMobileMethodCallRaw = jsonSerializer.decodeFromString(str)
+        public fun deserialize(str: String): IncomingSMMobileMethodCallRaw = Json.decodeFromString(str)
     }
 
     public val sourceId: String
@@ -19,9 +20,8 @@ public sealed interface IncomingSMMobileMethodCallRaw {
     public val targetId: List<String>
     public val timeStamp: String
     public val payload: Any
-    // TODO: receiving nulls only, not sure about correct type
-    // public val timeZone: Any?,
-    // public val fcuTime: Any?,
+    public val timeZone: JsonElement
+    public val fcuTime: JsonElement
 
     @Serializable
     @SerialName("CMD_HEARTBEAT")
@@ -31,21 +31,23 @@ public sealed interface IncomingSMMobileMethodCallRaw {
         override val targetId: List<String>,
         override val timeStamp: String,
         override val payload: Payload,
+        override val timeZone: JsonElement,
+        override val fcuTime: JsonElement,
     ) : IncomingSMMobileMethodCallRaw {
         @Serializable
         public data class Payload(
-            val iTemp: String?,
-            val oTemp: String?,
-            val fcuTcTemp: String?,
-            val fcuTcjTemp: String?,
-            val fcuFanRpm: String?,
-            val cduTdTemp: String?,
-            val cduTsTemp: String?,
-            val cduTeTemp: String?,
-            val cduCompHz: String?,
-            val cduFanRpm: String?,
-            val cduPmvPulse: String?,
-            val cduIac: String?,
+            val iTemp: String,
+            val oTemp: String,
+            val fcuTcTemp: String,
+            val fcuTcjTemp: String,
+            val fcuFanRpm: String,
+            val cduTdTemp: String,
+            val cduTsTemp: String,
+            val cduTeTemp: String,
+            val cduCompHz: String,
+            val cduFanRpm: String,
+            val cduPmvPulse: String,
+            val cduIac: String,
         )
     }
 
@@ -57,6 +59,8 @@ public sealed interface IncomingSMMobileMethodCallRaw {
         override val targetId: List<String>,
         override val timeStamp: String,
         override val payload: Payload,
+        override val timeZone: JsonElement,
+        override val fcuTime: JsonElement,
     ) : IncomingSMMobileMethodCallRaw {
         @Serializable
         public data class Payload(
@@ -72,6 +76,8 @@ public sealed interface IncomingSMMobileMethodCallRaw {
         override val targetId: List<String>,
         override val timeStamp: String,
         override val payload: Payload,
+        override val timeZone: JsonElement,
+        override val fcuTime: JsonElement,
     ) : IncomingSMMobileMethodCallRaw {
         @Serializable
         public data class Payload(

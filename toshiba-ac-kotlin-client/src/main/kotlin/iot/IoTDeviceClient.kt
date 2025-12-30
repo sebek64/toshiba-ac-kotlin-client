@@ -22,10 +22,10 @@ public class IoTDeviceClient private constructor(
             messageCallback: (IncomingSMMobileMethodCall) -> Unit,
         ): IoTDeviceClient {
             val client = DeviceClient(
-                connectionInfo.hostName,
-                connectionInfo.deviceId,
+                connectionInfo.hostName.value,
+                connectionInfo.deviceId.value,
                 {
-                    connectionInfo.sasToken.toCharArray()
+                    connectionInfo.sasToken.value.toCharArray()
                 },
                 IotHubClientProtocol.AMQPS,
             )
