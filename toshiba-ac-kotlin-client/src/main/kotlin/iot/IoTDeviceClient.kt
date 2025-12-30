@@ -25,7 +25,7 @@ public class IoTDeviceClient private constructor(
             hostName: IoTHostName,
             deviceId: DeviceId,
             sasToken: IoTSasToken,
-            messageCallback: (IncomingEvent) -> Unit,
+            onIncomingEvent: (IncomingEvent) -> Unit,
         ): IoTDeviceClient {
             val client = DeviceClient(
                 hostName.value,
@@ -47,7 +47,7 @@ public class IoTDeviceClient private constructor(
                         val payloadStr = payload.payloadAsJsonString
                         log.info { "Received method call with payload $payloadStr" }
                         val parsedPayload = IncomingSMMobileMethodCallRaw.deserialize(payloadStr)
-                        messageCallback(parsedPayload.parse())
+                        onIncomingEvent(parsedPayload.parse())
                         DirectMethodResponse(200, null)
                     } catch (e: Exception) {
                         log.error(e) { "Error processing method call $name" }

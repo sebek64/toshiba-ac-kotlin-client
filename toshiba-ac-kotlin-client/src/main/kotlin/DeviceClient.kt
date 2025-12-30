@@ -45,7 +45,7 @@ public class DeviceClient private constructor(
 
     public suspend fun registerAndLaunchIoTClient(
         deviceId: DeviceId,
-        messageCallback: (IncomingEvent) -> Unit,
+        onIncomingEvent: (IncomingEvent) -> Unit,
     ): IoTDeviceClient {
         val registerResult = httpDeviceClient.registerMobileDevice(
             tokenType = loginResult.tokenType,
@@ -58,7 +58,7 @@ public class DeviceClient private constructor(
             hostName = registerResult.hostName,
             deviceId = registerResult.deviceId,
             sasToken = registerResult.sasToken,
-            messageCallback = messageCallback,
+            onIncomingEvent = onIncomingEvent,
         )
     }
 }
