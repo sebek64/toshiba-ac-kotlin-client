@@ -7,10 +7,10 @@ public value class GetACListResult(
     public val groups: List<Group>,
 ) {
     public data class Group(
-        val GroupId: GroupId,
-        val GroupName: GroupName,
-        val ConsumerId: ConsumerId,
-        val TimeZone: GroupTimeZone,
+        val groupId: GroupId,
+        val groupName: GroupName,
+        val consumerId: ConsumerId,
+        val timeZone: GroupTimeZone,
         val acs: List<AC>,
     ) {
         public data class AC(
