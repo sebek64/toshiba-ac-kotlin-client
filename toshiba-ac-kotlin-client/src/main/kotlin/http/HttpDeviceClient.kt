@@ -12,6 +12,7 @@ import toshibaac.api.http.RegisterResponsePayload
 import toshibaac.client.DeviceId
 import toshibaac.client.IoTHostName
 import toshibaac.client.IoTSasToken
+import toshibaac.client.types.FCUState
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
@@ -58,11 +59,7 @@ public class HttpDeviceClient internal constructor(
             consumerId = ConsumerId(response.consumerId),
             countryId = CountryId(response.countryId),
             consumerMasterId = response.consumerMasterId,
-            isHeatQuantityActivated = when (response.isHeatQuantityActivated) {
-                "False" -> false
-                "True" -> true
-                else -> error("Unknown value for isHeatQuantityActivated: ${response.isHeatQuantityActivated}")
-            },
+            isHeatQuantityActivated = response.isHeatQuantityActivated,
         )
     }
 
@@ -103,14 +100,38 @@ public class HttpDeviceClient internal constructor(
         tokenType: TokenType,
         accessToken: AccessToken,
         consumerId: ConsumerId,
-    ): List<GetACMappingResponsePayload> = makeRequest(
-        request = HttpRequest.newBuilder()
-            .uri(URI.create("${AC_URL}GetConsumerACMapping?consumerId=${consumerId.value}"))
-            .header("Content-Type", "application/json")
-            .header("Authorization", "${tokenType.value} ${accessToken.value}")
-            .GET()
-            .build(),
-    ) { ApiResponse.deserialize(it) }
+    ): GetACListResult {
+        val response: List<GetACMappingResponsePayload> = makeRequest(
+            request = HttpRequest.newBuilder()
+                .uri(URI.create("${AC_URL}GetConsumerACMapping?consumerId=${consumerId.value}"))
+                .header("Content-Type", "application/json")
+                .header("Authorization", "${tokenType.value} ${accessToken.value}")
+                .GET()
+                .build(),
+        ) { ApiResponse.deserialize(it) }
+        return GetACListResult(
+            groups = response.map { group ->
+                GetACListResult.Group(
+                    groupId = GroupId(group.GroupId),
+                    groupName = GroupName(group.GroupName),
+                    consumerId = ConsumerId(group.ConsumerId),
+                    timeZone = GroupTimeZone(group.TimeZone),
+                    acs = group.ACList.map { ac ->
+                        GetACListResult.Group.AC(
+                            id = ACId(ac.Id),
+                            deviceUniqueId = DeviceUniqueId(ac.DeviceUniqueId),
+                            name = ACName(ac.Name),
+                            modelId = ACModelId(ac.ACModelId),
+                            description = ACDescription(ac.Description),
+                            fcuState = FCUState.from(ac.ACStateData),
+                            meritFeature = MeritFeature(ac.MeritFeature),
+                            adapterType = ACAdapterType(ac.AdapterType),
+                        )
+                    },
+                )
+            },
+        )
+    }
 
     private suspend fun <P> makeRequest(
         request: HttpRequest,
