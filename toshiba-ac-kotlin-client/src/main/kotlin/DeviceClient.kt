@@ -6,7 +6,7 @@ import toshibaac.client.http.HttpDeviceClient
 import toshibaac.client.http.LoginResult
 import toshibaac.client.http.Password
 import toshibaac.client.http.Username
-import toshibaac.client.iot.IncomingSMMobileMethodCallPayload
+import toshibaac.client.iot.IncomingEvent
 import toshibaac.client.iot.IoTDeviceClient
 
 public class DeviceClient private constructor(
@@ -45,7 +45,7 @@ public class DeviceClient private constructor(
 
     public suspend fun registerAndLaunchIoTClient(
         deviceId: DeviceId,
-        messageCallback: (IncomingSMMobileMethodCallPayload) -> Unit,
+        messageCallback: (IncomingEvent) -> Unit,
     ): IoTDeviceClient {
         val registerResult = httpDeviceClient.registerMobileDevice(
             tokenType = loginResult.tokenType,

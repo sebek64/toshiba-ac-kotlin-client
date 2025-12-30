@@ -25,7 +25,7 @@ public class IoTDeviceClient private constructor(
             hostName: IoTHostName,
             deviceId: DeviceId,
             sasToken: IoTSasToken,
-            messageCallback: (IncomingSMMobileMethodCallPayload) -> Unit,
+            messageCallback: (IncomingEvent) -> Unit,
         ): IoTDeviceClient {
             val client = DeviceClient(
                 hostName.value,
@@ -110,8 +110,8 @@ private fun IncomingSMMobileMethodCallRaw.parse(
     messageId: MessageId,
     targetId: List<DeviceId>,
     timeStamp: MessageTimestamp,
-): IncomingSMMobileMethodCallPayload = when (val unparsedCall = this) {
-    is IncomingSMMobileMethodCallRaw.FCUFromAC -> IncomingSMMobileMethodCallPayload.FCUFromAC(
+): IncomingEvent = when (val unparsedCall = this) {
+    is IncomingSMMobileMethodCallRaw.FCUFromAC -> IncomingEvent.FCUFromAC(
         sourceId = sourceId,
         messageId = messageId,
         targetId = targetId,
@@ -119,7 +119,7 @@ private fun IncomingSMMobileMethodCallRaw.parse(
         data = FCUState.from(unparsedCall.payload.data),
     )
 
-    is IncomingSMMobileMethodCallRaw.Heartbeat -> IncomingSMMobileMethodCallPayload.Heartbeat(
+    is IncomingSMMobileMethodCallRaw.Heartbeat -> IncomingEvent.Heartbeat(
         sourceId = sourceId,
         messageId = messageId,
         targetId = targetId,
@@ -138,49 +138,49 @@ private fun IncomingSMMobileMethodCallRaw.parse(
         cduIac = unparsedCall.payload.cduIac,
     )
 
-    is IncomingSMMobileMethodCallRaw.SetScheduleFromAC -> IncomingSMMobileMethodCallPayload.SetScheduleFromAC(
+    is IncomingSMMobileMethodCallRaw.SetScheduleFromAC -> IncomingEvent.SetScheduleFromAC(
         sourceId = sourceId,
         messageId = messageId,
         targetId = targetId,
         timeStamp = timeStamp,
-        programSetting = IncomingSMMobileMethodCallPayload.SetScheduleFromAC.ProgramSetting(
-            sunday = IncomingSMMobileMethodCallPayload.SetScheduleFromAC.ProgramSetting.Program(
+        programSetting = IncomingEvent.SetScheduleFromAC.ProgramSetting(
+            sunday = IncomingEvent.SetScheduleFromAC.ProgramSetting.Program(
                 p1 = unparsedCall.payload.programSetting.Sunday.p1,
                 p2 = unparsedCall.payload.programSetting.Sunday.p2,
                 p3 = unparsedCall.payload.programSetting.Sunday.p3,
                 p4 = unparsedCall.payload.programSetting.Sunday.p4,
             ),
-            monday = IncomingSMMobileMethodCallPayload.SetScheduleFromAC.ProgramSetting.Program(
+            monday = IncomingEvent.SetScheduleFromAC.ProgramSetting.Program(
                 p1 = unparsedCall.payload.programSetting.Monday.p1,
                 p2 = unparsedCall.payload.programSetting.Monday.p2,
                 p3 = unparsedCall.payload.programSetting.Monday.p3,
                 p4 = unparsedCall.payload.programSetting.Monday.p4,
             ),
-            tuesday = IncomingSMMobileMethodCallPayload.SetScheduleFromAC.ProgramSetting.Program(
+            tuesday = IncomingEvent.SetScheduleFromAC.ProgramSetting.Program(
                 p1 = unparsedCall.payload.programSetting.Tuesday.p1,
                 p2 = unparsedCall.payload.programSetting.Tuesday.p2,
                 p3 = unparsedCall.payload.programSetting.Tuesday.p3,
                 p4 = unparsedCall.payload.programSetting.Tuesday.p4,
             ),
-            wednesday = IncomingSMMobileMethodCallPayload.SetScheduleFromAC.ProgramSetting.Program(
+            wednesday = IncomingEvent.SetScheduleFromAC.ProgramSetting.Program(
                 p1 = unparsedCall.payload.programSetting.Wednesday.p1,
                 p2 = unparsedCall.payload.programSetting.Wednesday.p2,
                 p3 = unparsedCall.payload.programSetting.Wednesday.p3,
                 p4 = unparsedCall.payload.programSetting.Wednesday.p4,
             ),
-            thursday = IncomingSMMobileMethodCallPayload.SetScheduleFromAC.ProgramSetting.Program(
+            thursday = IncomingEvent.SetScheduleFromAC.ProgramSetting.Program(
                 p1 = unparsedCall.payload.programSetting.Thursday.p1,
                 p2 = unparsedCall.payload.programSetting.Thursday.p2,
                 p3 = unparsedCall.payload.programSetting.Thursday.p3,
                 p4 = unparsedCall.payload.programSetting.Thursday.p4,
             ),
-            friday = IncomingSMMobileMethodCallPayload.SetScheduleFromAC.ProgramSetting.Program(
+            friday = IncomingEvent.SetScheduleFromAC.ProgramSetting.Program(
                 p1 = unparsedCall.payload.programSetting.Friday.p1,
                 p2 = unparsedCall.payload.programSetting.Friday.p2,
                 p3 = unparsedCall.payload.programSetting.Friday.p3,
                 p4 = unparsedCall.payload.programSetting.Friday.p4,
             ),
-            saturday = IncomingSMMobileMethodCallPayload.SetScheduleFromAC.ProgramSetting.Program(
+            saturday = IncomingEvent.SetScheduleFromAC.ProgramSetting.Program(
                 p1 = unparsedCall.payload.programSetting.Saturday.p1,
                 p2 = unparsedCall.payload.programSetting.Saturday.p2,
                 p3 = unparsedCall.payload.programSetting.Saturday.p3,
@@ -189,7 +189,7 @@ private fun IncomingSMMobileMethodCallRaw.parse(
         ),
         schedulerStatus = unparsedCall.payload.schedulerStatus,
         dstStatus = unparsedCall.payload.dstStatus,
-        dst = IncomingSMMobileMethodCallPayload.SetScheduleFromAC.DST(
+        dst = IncomingEvent.SetScheduleFromAC.DST(
             time = unparsedCall.payload.dst.Time,
             status = unparsedCall.payload.dst.Status,
         ),

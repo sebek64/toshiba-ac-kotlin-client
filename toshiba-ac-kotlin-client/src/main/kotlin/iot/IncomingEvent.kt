@@ -5,7 +5,7 @@ import toshibaac.client.DeviceUniqueId
 import toshibaac.client.types.FCUState
 import toshibaac.client.types.Temperature
 
-public sealed interface IncomingSMMobileMethodCallPayload {
+public sealed interface IncomingEvent {
     public val sourceId: DeviceUniqueId
     public val messageId: MessageId
     public val targetId: List<DeviceId>
@@ -28,7 +28,7 @@ public sealed interface IncomingSMMobileMethodCallPayload {
         public val cduFanRpm: String?,
         public val cduPmvPulse: String?,
         public val cduIac: String?,
-    ) : IncomingSMMobileMethodCallPayload
+    ) : IncomingEvent
 
     public data class FCUFromAC(
         override val sourceId: DeviceUniqueId,
@@ -36,7 +36,7 @@ public sealed interface IncomingSMMobileMethodCallPayload {
         override val targetId: List<DeviceId>,
         override val timeStamp: MessageTimestamp,
         public val data: FCUState,
-    ) : IncomingSMMobileMethodCallPayload
+    ) : IncomingEvent
 
     // TODO: correct parsed content, now just raw copy
     public data class SetScheduleFromAC(
@@ -48,7 +48,7 @@ public sealed interface IncomingSMMobileMethodCallPayload {
         public val schedulerStatus: String,
         public val dstStatus: String,
         public val dst: DST,
-    ) : IncomingSMMobileMethodCallPayload {
+    ) : IncomingEvent {
         public data class ProgramSetting(
             public val sunday: Program,
             public val monday: Program,
