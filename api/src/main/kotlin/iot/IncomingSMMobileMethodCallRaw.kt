@@ -3,16 +3,16 @@ package toshibaac.api.iot
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlinx.serialization.json.JsonElement
-import toshibaac.api.jsonSerializer
 
 @OptIn(ExperimentalSerializationApi::class)
 @Serializable
 @JsonClassDiscriminator("cmd")
 public sealed interface IncomingSMMobileMethodCallRaw {
     public companion object {
-        public fun deserialize(str: String): IncomingSMMobileMethodCallRaw = jsonSerializer.decodeFromString(str)
+        public fun deserialize(str: String): IncomingSMMobileMethodCallRaw = Json.decodeFromString(str)
     }
 
     public val sourceId: String
