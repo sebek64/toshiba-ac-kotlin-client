@@ -1,10 +1,21 @@
 package toshibaac.client.iot
 
+import toshibaac.client.DeviceId
+import toshibaac.client.DeviceUniqueId
 import toshibaac.client.types.FCUState
 import toshibaac.client.types.Temperature
 
 public sealed interface IncomingSMMobileMethodCallPayload {
+    public val sourceId: DeviceUniqueId
+    public val messageId: MessageId
+    public val targetId: List<DeviceId>
+    public val timeStamp: MessageTimestamp
+
     public data class Heartbeat(
+        override val sourceId: DeviceUniqueId,
+        override val messageId: MessageId,
+        override val targetId: List<DeviceId>,
+        override val timeStamp: MessageTimestamp,
         public val iTemp: Temperature?,
         public val oTemp: Temperature?,
         public val fcuTcTemp: Temperature?,
@@ -20,11 +31,19 @@ public sealed interface IncomingSMMobileMethodCallPayload {
     ) : IncomingSMMobileMethodCallPayload
 
     public data class FCUFromAC(
+        override val sourceId: DeviceUniqueId,
+        override val messageId: MessageId,
+        override val targetId: List<DeviceId>,
+        override val timeStamp: MessageTimestamp,
         public val data: FCUState,
     ) : IncomingSMMobileMethodCallPayload
 
     // TODO: correct parsed content, now just raw copy
     public data class SetScheduleFromAC(
+        override val sourceId: DeviceUniqueId,
+        override val messageId: MessageId,
+        override val targetId: List<DeviceId>,
+        override val timeStamp: MessageTimestamp,
         public val programSetting: ProgramSetting,
         public val schedulerStatus: String,
         public val dstStatus: String,

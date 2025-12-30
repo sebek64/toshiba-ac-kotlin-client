@@ -25,7 +25,7 @@ public class IoTDeviceClient private constructor(
             hostName: IoTHostName,
             deviceId: DeviceId,
             sasToken: IoTSasToken,
-            messageCallback: (IncomingSMMobileMethodCall) -> Unit,
+            messageCallback: (IncomingSMMobileMethodCallPayload) -> Unit,
         ): IoTDeviceClient {
             val client = DeviceClient(
                 hostName.value,
@@ -48,11 +48,10 @@ public class IoTDeviceClient private constructor(
                         log.info { "Received method call with payload $payloadStr" }
                         val parsedPayload = IncomingSMMobileMethodCallRaw.deserialize(payloadStr)
                         messageCallback(
-                            IncomingSMMobileMethodCall(
+                            parsedPayload.parse(
                                 sourceId = DeviceUniqueId(parsedPayload.sourceId),
                                 messageId = MessageId(parsedPayload.messageId),
                                 targetId = parsedPayload.targetId.map { DeviceId(it) },
-                                payload = parsedPayload.parse(),
                                 timeStamp = MessageTimestamp(parsedPayload.timeStamp),
                             ),
                         )
@@ -106,12 +105,25 @@ public class IoTDeviceClient private constructor(
     }
 }
 
-private fun IncomingSMMobileMethodCallRaw.parse() = when (val unparsedCall = this) {
+private fun IncomingSMMobileMethodCallRaw.parse(
+    sourceId: DeviceUniqueId,
+    messageId: MessageId,
+    targetId: List<DeviceId>,
+    timeStamp: MessageTimestamp,
+): IncomingSMMobileMethodCallPayload = when (val unparsedCall = this) {
     is IncomingSMMobileMethodCallRaw.FCUFromAC -> IncomingSMMobileMethodCallPayload.FCUFromAC(
+        sourceId = sourceId,
+        messageId = messageId,
+        targetId = targetId,
+        timeStamp = timeStamp,
         data = FCUState.from(unparsedCall.payload.data),
     )
 
     is IncomingSMMobileMethodCallRaw.Heartbeat -> IncomingSMMobileMethodCallPayload.Heartbeat(
+        sourceId = sourceId,
+        messageId = messageId,
+        targetId = targetId,
+        timeStamp = timeStamp,
         iTemp = Temperature.fromRaw(unparsedCall.payload.iTemp),
         oTemp = Temperature.fromRaw(unparsedCall.payload.oTemp),
         fcuTcTemp = Temperature.fromRaw(unparsedCall.payload.fcuTcTemp),
@@ -127,6 +139,10 @@ private fun IncomingSMMobileMethodCallRaw.parse() = when (val unparsedCall = thi
     )
 
     is IncomingSMMobileMethodCallRaw.SetScheduleFromAC -> IncomingSMMobileMethodCallPayload.SetScheduleFromAC(
+        sourceId = sourceId,
+        messageId = messageId,
+        targetId = targetId,
+        timeStamp = timeStamp,
         programSetting = IncomingSMMobileMethodCallPayload.SetScheduleFromAC.ProgramSetting(
             sunday = IncomingSMMobileMethodCallPayload.SetScheduleFromAC.ProgramSetting.Program(
                 p1 = unparsedCall.payload.programSetting.Sunday.p1,
