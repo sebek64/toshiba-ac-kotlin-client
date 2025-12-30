@@ -9,6 +9,7 @@ import kotlinx.coroutines.CompletableDeferred
 import toshibaac.api.iot.IncomingSMMobileMethodCallRaw
 import toshibaac.api.iot.OutgoingMessage
 import toshibaac.client.DeviceId
+import toshibaac.client.DeviceUniqueId
 import toshibaac.client.IoTHostName
 import toshibaac.client.IoTSasToken
 import toshibaac.client.types.FCUState
@@ -48,11 +49,11 @@ public class IoTDeviceClient private constructor(
                         val parsedPayload = IncomingSMMobileMethodCallRaw.deserialize(payloadStr)
                         messageCallback(
                             IncomingSMMobileMethodCall(
-                                sourceId = parsedPayload.sourceId,
-                                messageId = parsedPayload.messageId,
-                                targetId = parsedPayload.targetId,
+                                sourceId = DeviceUniqueId(parsedPayload.sourceId),
+                                messageId = MessageId(parsedPayload.messageId),
+                                targetId = parsedPayload.targetId.map { DeviceId(it) },
                                 payload = parsedPayload.parse(),
-                                timeStamp = parsedPayload.timeStamp,
+                                timeStamp = MessageTimestamp(parsedPayload.timeStamp),
                             ),
                         )
                         DirectMethodResponse(200, null)

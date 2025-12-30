@@ -10,6 +10,7 @@ import toshibaac.api.http.LoginResponsePayload
 import toshibaac.api.http.RegisterRequest
 import toshibaac.api.http.RegisterResponsePayload
 import toshibaac.client.DeviceId
+import toshibaac.client.DeviceUniqueId
 import toshibaac.client.IoTHostName
 import toshibaac.client.IoTSasToken
 import toshibaac.client.types.FCUState
