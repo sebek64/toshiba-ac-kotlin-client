@@ -14,8 +14,6 @@ import toshibaac.client.IoTHostName
 import toshibaac.client.IoTSasToken
 import toshibaac.client.types.FCUState
 import toshibaac.client.types.Temperature
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 private val log = KotlinLogging.logger {}
 
@@ -74,14 +72,13 @@ public class IoTDeviceClient private constructor(
         }
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     public suspend fun sendEvent(
         outgoingEvent: OutgoingEvent,
     ) {
         val message = when (outgoingEvent) {
             is OutgoingEvent.SetFCUParameters -> OutgoingMessage.FCUToAC(
                 sourceId = deviceId.value,
-                messageId = Uuid.random().toString(),
+                messageId = outgoingEvent.messageId.value,
                 timeStamp = "0000000",
                 targetId = outgoingEvent.targetId.map { it.value },
                 payload = OutgoingMessage.FCUToAC.Payload(

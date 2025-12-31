@@ -6,6 +6,8 @@ plugins {
 
 dependencies {
     implementation(projects.toshibaAcKotlinClient)
+    implementation(libs.clikt)
+    implementation(libs.kotlinx.coroutines.core)
     implementation(libs.logback.classic)
 }
 
