@@ -1,6 +1,7 @@
 [versions]
 
 [libraries]
+clikt = { group = "com.github.ajalt.clikt", name = "clikt", version = "5.0.3" }
 kotlin-logging = { group = "io.github.oshai", name = "kotlin-logging", version = "7.0.13" }
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version = "1.10.2" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version = "1.9.0" }
