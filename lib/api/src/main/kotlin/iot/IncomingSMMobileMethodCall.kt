@@ -10,9 +10,9 @@ import kotlinx.serialization.json.JsonElement
 @OptIn(ExperimentalSerializationApi::class)
 @Serializable
 @JsonClassDiscriminator("cmd")
-public sealed interface IncomingSMMobileMethodCallRaw {
+public sealed interface IncomingSMMobileMethodCall {
     public companion object {
-        public fun deserialize(str: String): IncomingSMMobileMethodCallRaw = Json.decodeFromString(str)
+        public fun deserialize(str: String): IncomingSMMobileMethodCall = Json.decodeFromString(str)
     }
 
     public val sourceId: String
@@ -33,7 +33,7 @@ public sealed interface IncomingSMMobileMethodCallRaw {
         override val payload: Payload,
         override val timeZone: JsonElement,
         override val fcuTime: JsonElement,
-    ) : IncomingSMMobileMethodCallRaw {
+    ) : IncomingSMMobileMethodCall {
         @Serializable
         public data class Payload(
             val iTemp: String,
@@ -61,7 +61,7 @@ public sealed interface IncomingSMMobileMethodCallRaw {
         override val payload: Payload,
         override val timeZone: JsonElement,
         override val fcuTime: JsonElement,
-    ) : IncomingSMMobileMethodCallRaw {
+    ) : IncomingSMMobileMethodCall {
         @Serializable
         public data class Payload(
             val data: String,
@@ -78,7 +78,7 @@ public sealed interface IncomingSMMobileMethodCallRaw {
         override val payload: Payload,
         override val timeZone: JsonElement,
         override val fcuTime: JsonElement,
-    ) : IncomingSMMobileMethodCallRaw {
+    ) : IncomingSMMobileMethodCall {
         @Serializable
         public data class Payload(
             val programSetting: ProgramSetting,
