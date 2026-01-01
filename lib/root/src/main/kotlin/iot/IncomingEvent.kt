@@ -3,6 +3,7 @@ package toshibaac.client.iot
 import toshibaac.client.DeviceId
 import toshibaac.client.DeviceUniqueId
 import toshibaac.client.types.FCUState
+import toshibaac.client.types.ProgramEntry
 import toshibaac.client.types.Temperature
 
 public sealed interface IncomingEvent {
@@ -38,7 +39,6 @@ public sealed interface IncomingEvent {
         public val data: FCUState,
     ) : IncomingEvent
 
-    // TODO: correct parsed content, now just raw copy
     public data class SetScheduleFromAC(
         override val sourceId: DeviceUniqueId,
         override val messageId: MessageId,
@@ -59,10 +59,10 @@ public sealed interface IncomingEvent {
             public val saturday: Program,
         ) {
             public data class Program(
-                public val p1: String,
-                public val p2: String,
-                public val p3: String,
-                public val p4: String,
+                public val p1: ProgramEntry?,
+                public val p2: ProgramEntry?,
+                public val p3: ProgramEntry?,
+                public val p4: ProgramEntry?,
             )
         }
 
