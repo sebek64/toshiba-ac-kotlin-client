@@ -1,7 +1,9 @@
 package toshibaac.cli
 
-import kotlinx.coroutines.flow.first
+import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.onSubscription
+import kotlinx.coroutines.flow.take
 import toshibaac.client.DeviceClient
 import toshibaac.client.http.ACName
 import toshibaac.client.iot.IncomingEvent
@@ -15,6 +17,8 @@ import toshibaac.client.types.PowerMode
 import toshibaac.client.types.PureIonMode
 import toshibaac.client.types.SelfCleaningMode
 import toshibaac.client.types.SwingMode
+
+private val log = KotlinLogging.logger {}
 
 internal sealed interface Command {
     suspend fun execute(
@@ -98,7 +102,7 @@ internal sealed interface Command {
         ) {
             val acList = deviceClient.get().getACList()
             val acs = acList.groups.flatMap { it.acs }
-            val uids = acNames.map { name ->
+            val uidToName = acNames.associateBy { name ->
                 val ac = acs.firstOrNull { it.name == name } ?: error("AC $name not found")
                 ac.deviceUniqueId
             }
@@ -108,17 +112,25 @@ internal sealed interface Command {
                 .onSubscription {
                     iotClient.iotClient.sendEvent(
                         OutgoingEvent.SetFCUParameters(
-                            targetId = uids,
+                            targetId = uidToName.keys.toList(),
                             messageId = messageId,
                             fcuState = fcuState,
                         ),
                     )
                 }
-                .first { incomingEvent ->
+                .filter { incomingEvent ->
                     when (incomingEvent) {
                         is IncomingEvent.Heartbeat -> false
                         is IncomingEvent.SetScheduleFromAC -> false
                         is IncomingEvent.FCUFromAC -> incomingEvent.messageId == messageId
+                    }
+                }
+                .take(acNames.size)
+                .collect { incomingEvent ->
+                    val sourceId = incomingEvent.sourceId
+                    when (val targetName = uidToName[sourceId]) {
+                        null -> log.warn { "Received confirmation from unknown device ${sourceId.value}" }
+                        else -> log.info { "Received confirmation for ${targetName.value}" }
                     }
                 }
         }
