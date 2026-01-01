@@ -3,7 +3,12 @@ package toshibaac.cli
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.main
 import com.github.ajalt.clikt.core.subcommands
+import com.github.ajalt.clikt.parameters.groups.default
+import com.github.ajalt.clikt.parameters.groups.mutuallyExclusiveOptions
+import com.github.ajalt.clikt.parameters.groups.required
+import com.github.ajalt.clikt.parameters.groups.single
 import com.github.ajalt.clikt.parameters.options.convert
+import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.multiple
 import com.github.ajalt.clikt.parameters.options.option
@@ -31,6 +36,7 @@ import toshibaac.client.types.SelfCleaningMode
 import toshibaac.client.types.SwingMode
 import toshibaac.client.types.Temperature
 import kotlin.concurrent.thread
+import kotlin.time.Duration
 
 public suspend fun main(args: Array<String>) {
     val mutableContextBuilder = MutableContextBuilder()
@@ -121,9 +127,31 @@ private class StatusCommand(
     )
         .flag(default = false)
 
+    private val listenForUpdatesFor: Duration by mutuallyExclusiveOptions(
+        option(
+            "--listen-for",
+            help = "Listen for updates for the specified duration (e.g., 30s, 5m)",
+        )
+            .convert { Duration.parse(it) },
+        option(
+            "--listen",
+            help = "Listen for updates indefinitely",
+        )
+            .flag(default = false)
+            .convert { value ->
+                when (value) {
+                    true -> Duration.INFINITE
+                    false -> Duration.ZERO
+                }
+            },
+    )
+        .single()
+        .default(Duration.ZERO)
+
     override fun run() {
         mutableContextBuilder += Command.Status(
             printDefaults = printDefaults,
+            listenForUpdatesFor = listenForUpdatesFor,
         )
     }
 }
