@@ -18,7 +18,6 @@ The command-line tool is located in the `cli` module.
 
 ## TODOs / missing features
 
-* Improve names of classes.
 * Provide documentation of the public API.
 * Make the library available in a public Maven repository.
 * Unit-test the small amount of business logic that is present (most of the code is just the protocol implementation).

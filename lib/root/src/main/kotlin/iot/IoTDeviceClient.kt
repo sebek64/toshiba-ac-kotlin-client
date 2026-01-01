@@ -6,8 +6,8 @@ import com.microsoft.azure.sdk.iot.device.Message
 import com.microsoft.azure.sdk.iot.device.twin.DirectMethodResponse
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CompletableDeferred
-import toshibaac.api.iot.IncomingSMMobileMethodCallRaw
-import toshibaac.api.iot.OutgoingMessage
+import toshibaac.api.iot.IncomingSMMobileMethodCall
+import toshibaac.api.iot.OutgoingIoTMessage
 import toshibaac.client.DeviceId
 import toshibaac.client.DeviceUniqueId
 import toshibaac.client.IoTHostName
@@ -47,8 +47,11 @@ public class IoTDeviceClient private constructor(
                         }
                         val payloadStr = payload.payloadAsJsonString
                         log.info { "Received method call with payload $payloadStr" }
-                        val parsedPayload = IncomingSMMobileMethodCallRaw.deserialize(payloadStr)
-                        onIncomingEvent(parsedPayload.parse())
+                        onIncomingEvent(
+                            IncomingSMMobileMethodCall
+                                .deserialize(payloadStr)
+                                .parse(),
+                        )
                         DirectMethodResponse(200, null)
                     } catch (e: Exception) {
                         log.error(e) { "Error processing method call $name" }
@@ -76,12 +79,12 @@ public class IoTDeviceClient private constructor(
         outgoingEvent: OutgoingEvent,
     ) {
         val message = when (outgoingEvent) {
-            is OutgoingEvent.SetFCUParameters -> OutgoingMessage.FCUToAC(
+            is OutgoingEvent.SetFCUParameters -> OutgoingIoTMessage.FCUToAC(
                 sourceId = deviceId.value,
                 messageId = outgoingEvent.messageId.value,
                 timeStamp = "0000000",
                 targetId = outgoingEvent.targetId.map { it.value },
-                payload = OutgoingMessage.FCUToAC.Payload(
+                payload = OutgoingIoTMessage.FCUToAC.Payload(
                     data = outgoingEvent.fcuState.asHexString,
                 ),
             )
@@ -111,8 +114,8 @@ public class IoTDeviceClient private constructor(
     }
 }
 
-private fun IncomingSMMobileMethodCallRaw.parse(): IncomingEvent = when (val unparsedCall = this) {
-    is IncomingSMMobileMethodCallRaw.FCUFromAC -> IncomingEvent.FCUFromAC(
+private fun IncomingSMMobileMethodCall.parse(): IncomingEvent = when (val unparsedCall = this) {
+    is IncomingSMMobileMethodCall.FCUFromAC -> IncomingEvent.FCUFromAC(
         sourceId = DeviceUniqueId(unparsedCall.sourceId),
         messageId = MessageId(unparsedCall.messageId),
         targetId = unparsedCall.targetId.map { DeviceId(it) },
@@ -120,7 +123,7 @@ private fun IncomingSMMobileMethodCallRaw.parse(): IncomingEvent = when (val unp
         data = FCUState.from(unparsedCall.payload.data),
     )
 
-    is IncomingSMMobileMethodCallRaw.Heartbeat -> IncomingEvent.Heartbeat(
+    is IncomingSMMobileMethodCall.Heartbeat -> IncomingEvent.Heartbeat(
         sourceId = DeviceUniqueId(unparsedCall.sourceId),
         messageId = MessageId(unparsedCall.messageId),
         targetId = unparsedCall.targetId.map { DeviceId(it) },
@@ -139,7 +142,7 @@ private fun IncomingSMMobileMethodCallRaw.parse(): IncomingEvent = when (val unp
         cduIac = unparsedCall.payload.cduIac,
     )
 
-    is IncomingSMMobileMethodCallRaw.SetScheduleFromAC -> IncomingEvent.SetScheduleFromAC(
+    is IncomingSMMobileMethodCall.SetScheduleFromAC -> IncomingEvent.SetScheduleFromAC(
         sourceId = DeviceUniqueId(unparsedCall.sourceId),
         messageId = MessageId(unparsedCall.messageId),
         targetId = unparsedCall.targetId.map { DeviceId(it) },

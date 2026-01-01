@@ -9,7 +9,7 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 @OptIn(ExperimentalSerializationApi::class)
 @Serializable
 @JsonClassDiscriminator("cmd")
-public sealed interface OutgoingMessage {
+public sealed interface OutgoingIoTMessage {
     public val sourceId: String
     public val messageId: String
     public val targetId: List<String>
@@ -23,7 +23,7 @@ public sealed interface OutgoingMessage {
         override val targetId: List<String>,
         public val payload: Payload,
         override val timeStamp: String,
-    ) : OutgoingMessage {
+    ) : OutgoingIoTMessage {
         @Serializable
         public data class Payload(
             val data: String,
