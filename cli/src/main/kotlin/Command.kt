@@ -42,7 +42,7 @@ internal sealed interface Command {
                 withTimeout(listenForUpdatesFor) {
                     iotClientWrapper.get().incomingEvents
                         .onSubscription {
-                            deviceClient.get().getACList().print()
+                            deviceClient.get().getACList().prettyPrint()
                         }
                         .collect { incomingEvent ->
                             // TODO: pretty-print and resolve IDs to names
@@ -50,65 +50,16 @@ internal sealed interface Command {
                         }
                 }
             } else {
-                deviceClient.get().getACList().print()
+                deviceClient.get().getACList().prettyPrint()
             }
         }
 
-        private fun GetACListResult.print() {
+        private fun GetACListResult.prettyPrint() {
             groups.forEach { group ->
                 println("Group: ${group.groupName.value}")
                 group.acs.forEach { ac ->
                     println("  AC: ${ac.name.value} ${ac.fcuState.acStatus}")
-                    ac.fcuState.acStatus?.let { value ->
-                        println("    Status: $value")
-                    }
-                    ac.fcuState.acMode?.let { value ->
-                        println("    Mode: $value")
-                    }
-                    ac.fcuState.fanMode?.let { value ->
-                        if (printDefaults || value != FanMode.AUTO) {
-                            println("    Fan mode: $value")
-                        }
-                    }
-                    ac.fcuState.swingMode?.let { value ->
-                        if (printDefaults || value != SwingMode.OFF) {
-                            println("    Swing mode: $value")
-                        }
-                    }
-                    ac.fcuState.powerMode?.let { value ->
-                        if (printDefaults || value != PowerMode.POWER_100) {
-                            println("    Power mode: $value")
-                        }
-                    }
-                    ac.fcuState.temperature?.let { value ->
-                        println("    Target Temperature: ${value.value.value}°C")
-                    }
-                    ac.fcuState.indoorTemperature?.let { value ->
-                        println("    Indoor Temperature: ${value.value.value}°C")
-                    }
-                    ac.fcuState.outdoorTemperature?.let { value ->
-                        println("    Outdoor Temperature: ${value.value.value}°C")
-                    }
-                    ac.fcuState.meritAMode?.let { value ->
-                        if (printDefaults || value != MeritAMode.OFF) {
-                            println("    Merit A Mode: $value")
-                        }
-                    }
-                    ac.fcuState.meritBMode?.let { value ->
-                        if (printDefaults || value != MeritBMode.OFF) {
-                            println("    Merit B Mode: $value")
-                        }
-                    }
-                    ac.fcuState.pureIonMode?.let { value ->
-                        if (printDefaults || value != PureIonMode.OFF) {
-                            println("    Pure Ion Mode: $value")
-                        }
-                    }
-                    ac.fcuState.selfCleaningMode?.let { value ->
-                        if (printDefaults || value != SelfCleaningMode.OFF) {
-                            println("    Self Cleaning Mode: $value")
-                        }
-                    }
+                    ac.fcuState.prettyPrint(printDefaults)
                 }
             }
         }
@@ -124,6 +75,7 @@ internal sealed interface Command {
                 groupSetting.programSetting.prettyPrint("  ")
                 groupSetting.acSettings.forEach { acSetting ->
                     println("  AC: ${acSetting.name.value}")
+                    acSetting.state.prettyPrint(printDefaults = false)
                     acSetting.programSetting.prettyPrint("    ")
                 }
             }
@@ -212,6 +164,59 @@ internal sealed interface Command {
                         else -> log.info { "Received confirmation for ${targetName.value}" }
                     }
                 }
+        }
+    }
+}
+
+private fun FCUState.prettyPrint(printDefaults: Boolean) {
+    acStatus?.let { value ->
+        println("    Status: $value")
+    }
+    acMode?.let { value ->
+        println("    Mode: $value")
+    }
+    fanMode?.let { value ->
+        if (printDefaults || value != FanMode.AUTO) {
+            println("    Fan mode: $value")
+        }
+    }
+    swingMode?.let { value ->
+        if (printDefaults || value != SwingMode.OFF) {
+            println("    Swing mode: $value")
+        }
+    }
+    powerMode?.let { value ->
+        if (printDefaults || value != PowerMode.POWER_100) {
+            println("    Power mode: $value")
+        }
+    }
+    temperature?.let { value ->
+        println("    Target Temperature: ${value.value.value}°C")
+    }
+    indoorTemperature?.let { value ->
+        println("    Indoor Temperature: ${value.value.value}°C")
+    }
+    outdoorTemperature?.let { value ->
+        println("    Outdoor Temperature: ${value.value.value}°C")
+    }
+    meritAMode?.let { value ->
+        if (printDefaults || value != MeritAMode.OFF) {
+            println("    Merit A Mode: $value")
+        }
+    }
+    meritBMode?.let { value ->
+        if (printDefaults || value != MeritBMode.OFF) {
+            println("    Merit B Mode: $value")
+        }
+    }
+    pureIonMode?.let { value ->
+        if (printDefaults || value != PureIonMode.OFF) {
+            println("    Pure Ion Mode: $value")
+        }
+    }
+    selfCleaningMode?.let { value ->
+        if (printDefaults || value != SelfCleaningMode.OFF) {
+            println("    Self Cleaning Mode: $value")
         }
     }
 }
