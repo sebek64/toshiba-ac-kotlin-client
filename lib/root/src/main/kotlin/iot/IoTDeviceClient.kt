@@ -46,7 +46,7 @@ public class IoTDeviceClient private constructor(
                             return@subscribeToMethodsAsync DirectMethodResponse(404, null)
                         }
                         val payloadStr = payload.payloadAsJsonString
-                        log.info { "Received method call with payload $payloadStr" }
+                        log.debug { "Received method call with payload $payloadStr" }
                         onIncomingEvent(
                             IncomingSMMobileMethodCall
                                 .deserialize(payloadStr)
