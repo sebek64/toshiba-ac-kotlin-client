@@ -14,3 +14,13 @@ dependencies {
 application {
     mainClass = "toshibaac.cli.MainKt"
 }
+
+distributions {
+    main {
+        distributionBaseName.set("toshiba-ac-kotlin-client-cli")
+    }
+}
+
+tasks.distTar {
+    compression = Compression.GZIP
+}

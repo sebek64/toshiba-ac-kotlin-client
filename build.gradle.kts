@@ -12,7 +12,7 @@ private val jvmTargetValue = JvmTarget.JVM_21
 
 allprojects {
     group = "toshibaac.client"
-    version = "0.0.1-SNAPSHOT"
+    version = findProperty("release.version") as? String ?: "0.0.0-development"
 
     repositories {
         mavenCentral()
