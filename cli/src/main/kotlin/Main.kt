@@ -34,6 +34,7 @@ import toshibaac.client.types.PowerMode
 import toshibaac.client.types.PureIonMode
 import toshibaac.client.types.SelfCleaningMode
 import toshibaac.client.types.SwingMode
+import toshibaac.client.types.TargetTemperature
 import toshibaac.client.types.Temperature
 import kotlin.concurrent.thread
 import kotlin.time.Duration
@@ -43,6 +44,7 @@ public suspend fun main(args: Array<String>) {
     ToshibaCLICommand(mutableContextBuilder)
         .subcommands(
             StatusCommand(mutableContextBuilder),
+            QueryScheduleCommand(mutableContextBuilder),
             SetParametersCommand(mutableContextBuilder),
         )
         .main(args)
@@ -156,6 +158,14 @@ private class StatusCommand(
     }
 }
 
+private class QueryScheduleCommand(
+    private val mutableContextBuilder: MutableContextBuilder,
+) : CliktCommand() {
+    override fun run() {
+        mutableContextBuilder += Command.QuerySchedule()
+    }
+}
+
 private class SetParametersCommand(
     private val mutableContextBuilder: MutableContextBuilder,
 ) : CliktCommand() {
@@ -179,8 +189,8 @@ private class SetParametersCommand(
             "fan" to ACMode.FAN,
         )
 
-    private val temperature: Temperature? by option(help = "Target temperature in Celsius")
-        .convert { Temperature(it.toInt()) }
+    private val temperature: TargetTemperature? by option(help = "Target temperature in Celsius")
+        .convert { TargetTemperature(Temperature(it.toInt())) }
 
     private val fanMode: FanMode? by option(help = "Target fan mode")
         .choice(

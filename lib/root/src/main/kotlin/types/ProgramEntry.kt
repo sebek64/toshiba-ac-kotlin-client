@@ -2,12 +2,12 @@
 
 package toshibaac.client.types
 
-public class ProgramEntry(
+public data class ProgramEntry(
     public val hours: Hours,
     public val minutes: Minutes,
     public val acStatus: ACStatus,
     public val acMode: ACMode?,
-    public val temperature: Temperature?,
+    public val temperature: TargetTemperature?,
     public val fanMode: FanMode?,
     public val meritBMode: MeritBMode?,
     public val meritAMode: MeritAMode?,
@@ -15,13 +15,13 @@ public class ProgramEntry(
 ) {
     internal companion object {
         fun from(str: String): ProgramEntry? {
-            if (str.isEmpty()) {
+            if (str.isEmpty() || str == "invalid") { // TODO: better representation of invalid?
                 return null
             }
             val bytes = str.hexToByteArray()
             return ProgramEntry(
-                hours = Hours(bytes[0].toInt()),
-                minutes = Minutes(bytes[1].toInt()),
+                hours = Hours(bytes[0].toHexString().toInt(10)),
+                minutes = Minutes(bytes[1].toHexString().toInt(10)),
                 acStatus = when (bytes[2]) {
                     0x30.toByte() -> ACStatus.ON
                     0x31.toByte() -> ACStatus.OFF
@@ -37,7 +37,7 @@ public class ProgramEntry(
                     0x00.toByte() -> null // TODO: how to represent better?
                     else -> throw IllegalArgumentException("Invalid ACMode byte: ${bytes[1]}")
                 },
-                temperature = Temperature.fromRaw(bytes[4]),
+                temperature = Temperature.fromRaw(bytes[4])?.let { TargetTemperature(it) },
                 fanMode = when (bytes[5]) {
                     0x41.toByte() -> FanMode.AUTO
                     0x31.toByte() -> FanMode.QUIET
@@ -105,7 +105,7 @@ public class ProgramEntry(
                 ACMode.FAN -> 0x45.toByte()
                 null -> 0xff.toByte()
             },
-            temperature.asByte,
+            temperature?.value.asByte,
             when (fanMode) {
                 FanMode.AUTO -> 0x41.toByte()
                 FanMode.QUIET -> 0x31.toByte()

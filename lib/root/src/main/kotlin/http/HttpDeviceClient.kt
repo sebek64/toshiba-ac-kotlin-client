@@ -5,6 +5,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import toshibaac.api.http.ApiResponse
 import toshibaac.api.http.GetACMappingResponsePayload
+import toshibaac.api.http.GetProgramSettingsResponsePayload
 import toshibaac.api.http.LoginRequest
 import toshibaac.api.http.LoginResponsePayload
 import toshibaac.api.http.RegisterRequest
@@ -14,6 +15,7 @@ import toshibaac.client.DeviceUniqueId
 import toshibaac.client.IoTHostName
 import toshibaac.client.IoTSasToken
 import toshibaac.client.types.FCUState
+import toshibaac.client.types.ProgramEntry
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
@@ -133,6 +135,67 @@ internal class HttpDeviceClient internal constructor(
             },
         )
     }
+
+    suspend fun getProgramSettings(
+        tokenType: TokenType,
+        accessToken: AccessToken,
+        consumerId: ConsumerId,
+    ): GetProgramSettingsResult {
+        val response: GetProgramSettingsResponsePayload = makeRequest(
+            request = HttpRequest.newBuilder()
+                .uri(URI.create("${AC_URL}GetConsumerProgramSettings?consumerId=${consumerId.value}"))
+                .header("Content-Type", "application/json")
+                .header("Authorization", "${tokenType.value} ${accessToken.value}")
+                .GET()
+                .build(),
+        ) { ApiResponse.deserialize(it) }
+        return GetProgramSettingsResult(
+            groupSettings = response.ACGroupProgramSettings.map { groupSetting ->
+                GetProgramSettingsResult.GroupSetting(
+                    groupId = GroupId(groupSetting.GroupId),
+                    groupName = GroupName(groupSetting.GroupName),
+                    acSettings = groupSetting.ACProgramSettingList.map { acSetting ->
+                        GetProgramSettingsResult.GroupSetting.ACSetting(
+                            id = ACId(acSetting.ACId),
+                            deviceUniqueId = DeviceUniqueId(acSetting.ACUniqueId),
+                            name = ACName(acSetting.ACName),
+                            model = ACModelId(acSetting.ACModel),
+                            timeZone = acSetting.timeZone,
+                            dstStatus = acSetting.dstStatus,
+                            schedulerStatus = acSetting.schedulerStatus,
+                            state = FCUState.from(acSetting.ACStateDataForProgram),
+                            meritFeature = MeritFeature(acSetting.MeritFeature),
+                            programSetting = acSetting.programSetting.toProgramSetting(),
+                        )
+                    },
+                    programSetting = groupSetting.programSetting.toProgramSetting(),
+                )
+            },
+        )
+    }
+
+    private fun GetProgramSettingsResponsePayload.ProgramSetting.toProgramSetting(): GetProgramSettingsResult.ProgramSetting = GetProgramSettingsResult.ProgramSetting(
+        sunday = Sunday.toProgram(),
+        monday = Monday.toProgram(),
+        tuesday = Tuesday.toProgram(),
+        wednesday = Wednesday.toProgram(),
+        thursday = Thursday.toProgram(),
+        friday = Friday.toProgram(),
+        saturday = Saturday.toProgram(),
+    )
+
+    private fun GetProgramSettingsResponsePayload.ProgramSetting.Program.toProgram(): GetProgramSettingsResult.ProgramSetting.Program = GetProgramSettingsResult.ProgramSetting.Program(
+        p1 = ProgramEntry.from(this.p1),
+        p2 = ProgramEntry.from(this.p2),
+        p3 = ProgramEntry.from(this.p3),
+        p4 = ProgramEntry.from(this.p4),
+        p5 = ProgramEntry.from(this.p5),
+        p6 = ProgramEntry.from(this.p6),
+        p7 = ProgramEntry.from(this.p7),
+        p8 = ProgramEntry.from(this.p8),
+        p9 = ProgramEntry.from(this.p9),
+        p10 = ProgramEntry.from(this.p10),
+    )
 
     private suspend fun <P> makeRequest(
         request: HttpRequest,

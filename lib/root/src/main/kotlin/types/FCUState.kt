@@ -4,15 +4,15 @@ package toshibaac.client.types
 public data class FCUState(
     val acStatus: ACStatus?,
     val acMode: ACMode?,
-    val temperature: Temperature?,
+    val temperature: TargetTemperature?,
     val fanMode: FanMode?,
     val swingMode: SwingMode?,
     val powerMode: PowerMode?,
     val meritBMode: MeritBMode?,
     val meritAMode: MeritAMode?,
     val pureIonMode: PureIonMode?,
-    val indoorTemperature: Temperature?,
-    val outdoorTemperature: Temperature?,
+    val indoorTemperature: IndoorTemperature?,
+    val outdoorTemperature: OutdoorTemperature?,
     // unknown field
     // 3x some timer fields
     //   010100 for timer setting
@@ -44,7 +44,7 @@ public data class FCUState(
                     0x00.toByte() -> null // TODO: how to represent better?
                     else -> throw IllegalArgumentException("Invalid ACMode byte: ${bytes[1]}")
                 },
-                temperature = Temperature.fromRaw(bytes[2]),
+                temperature = Temperature.fromRaw(bytes[2])?.let { TargetTemperature(it) },
                 fanMode = when (bytes[3]) {
                     0x41.toByte() -> FanMode.AUTO
                     0x31.toByte() -> FanMode.QUIET
@@ -105,8 +105,8 @@ public data class FCUState(
                     0xFF.toByte() -> null
                     else -> throw IllegalArgumentException("Invalid PureIonMode byte: ${bytes[7]}")
                 },
-                indoorTemperature = Temperature.fromRaw(bytes[8]),
-                outdoorTemperature = Temperature.fromRaw(bytes[9]),
+                indoorTemperature = Temperature.fromRaw(bytes[8])?.let { IndoorTemperature(it) },
+                outdoorTemperature = Temperature.fromRaw(bytes[9])?.let { OutdoorTemperature(it) },
                 selfCleaningMode = when (bytes[14]) {
                     0x10.toByte() -> SelfCleaningMode.OFF
                     0x18.toByte() -> SelfCleaningMode.ON
@@ -132,7 +132,7 @@ public data class FCUState(
                 ACMode.FAN -> 0x45.toByte()
                 null -> 0xff.toByte()
             },
-            temperature.asByte,
+            temperature?.value.asByte,
             when (fanMode) {
                 FanMode.AUTO -> 0x41.toByte()
                 FanMode.QUIET -> 0x31.toByte()
@@ -185,8 +185,8 @@ public data class FCUState(
                 PureIonMode.ON -> 0x18.toByte()
                 null -> 0xff.toByte()
             },
-            indoorTemperature.asByte,
-            outdoorTemperature.asByte,
+            indoorTemperature?.value.asByte,
+            outdoorTemperature?.value.asByte,
             0xff.toByte(),
             0xff.toByte(),
             0xff.toByte(),

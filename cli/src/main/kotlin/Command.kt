@@ -8,6 +8,7 @@ import kotlinx.coroutines.withTimeout
 import toshibaac.client.DeviceClient
 import toshibaac.client.http.ACName
 import toshibaac.client.http.GetACListResult
+import toshibaac.client.http.GetProgramSettingsResult
 import toshibaac.client.iot.IncomingEvent
 import toshibaac.client.iot.MessageId
 import toshibaac.client.iot.OutgoingEvent
@@ -41,7 +42,7 @@ internal sealed interface Command {
                 withTimeout(listenForUpdatesFor) {
                     iotClientWrapper.get().incomingEvents
                         .onSubscription {
-                            deviceClient.get().getACList().print()
+                            deviceClient.get().getACList().prettyPrint()
                         }
                         .collect { incomingEvent ->
                             // TODO: pretty-print and resolve IDs to names
@@ -49,65 +50,74 @@ internal sealed interface Command {
                         }
                 }
             } else {
-                deviceClient.get().getACList().print()
+                deviceClient.get().getACList().prettyPrint()
             }
         }
 
-        private fun GetACListResult.print() {
+        private fun GetACListResult.prettyPrint() {
             groups.forEach { group ->
                 println("Group: ${group.groupName.value}")
                 group.acs.forEach { ac ->
                     println("  AC: ${ac.name.value} ${ac.fcuState.acStatus}")
-                    ac.fcuState.acStatus?.let { value ->
-                        println("    Status: $value")
+                    ac.fcuState.prettyPrint(printDefaults)
+                }
+            }
+        }
+    }
+
+    class QuerySchedule : Command {
+        override suspend fun execute(
+            deviceClient: SuspendLazy<DeviceClient>,
+            iotClientWrapper: LazyCloseable<IoTClientWrapper>,
+        ) {
+            deviceClient.get().getProgramSettings().groupSettings.forEach { groupSetting ->
+                println("Group: ${groupSetting.groupName.value}")
+                groupSetting.programSetting.prettyPrint("  ")
+                groupSetting.acSettings.forEach { acSetting ->
+                    println("  AC: ${acSetting.name.value}")
+                    acSetting.state.prettyPrint(printDefaults = false)
+                    acSetting.programSetting.prettyPrint("    ")
+                }
+            }
+        }
+
+        private fun GetProgramSettingsResult.ProgramSetting.prettyPrint(prefix: String) {
+            sunday.prettyPrint(prefix = prefix, dayName = "Sunday")
+            monday.prettyPrint(prefix = prefix, dayName = "Monday")
+            tuesday.prettyPrint(prefix = prefix, dayName = "Tuesday")
+            wednesday.prettyPrint(prefix = prefix, dayName = "Wednesday")
+            thursday.prettyPrint(prefix = prefix, dayName = "Thursday")
+            friday.prettyPrint(prefix = prefix, dayName = "Friday")
+            saturday.prettyPrint(prefix = prefix, dayName = "Saturday")
+        }
+
+        private fun GetProgramSettingsResult.ProgramSetting.Program.prettyPrint(
+            prefix: String,
+            dayName: String,
+        ) {
+            println("$prefix$dayName:")
+            listOf(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10).forEach { programEntry ->
+                if (programEntry != null) {
+                    print("  $prefix${programEntry.hours.value}:${programEntry.minutes.value} -> ${programEntry.acStatus}")
+                    programEntry.acMode?.let { value ->
+                        print(" Mode: $value")
                     }
-                    ac.fcuState.acMode?.let { value ->
-                        println("    Mode: $value")
+                    programEntry.temperature?.let { value ->
+                        print(" Target Temperature: ${value.value.value}°C")
                     }
-                    ac.fcuState.fanMode?.let { value ->
-                        if (printDefaults || value != FanMode.AUTO) {
-                            println("    Fan mode: $value")
-                        }
+                    programEntry.fanMode?.let { value ->
+                        print(" Fan mode: $value")
                     }
-                    ac.fcuState.swingMode?.let { value ->
-                        if (printDefaults || value != SwingMode.OFF) {
-                            println("    Swing mode: $value")
-                        }
+                    programEntry.meritAMode?.let { value ->
+                        print(" Merit A Mode: $value")
                     }
-                    ac.fcuState.powerMode?.let { value ->
-                        if (printDefaults || value != PowerMode.POWER_100) {
-                            println("    Power mode: $value")
-                        }
+                    programEntry.meritBMode?.let { value ->
+                        print(" Merit B Mode: $value")
                     }
-                    ac.fcuState.temperature?.let { value ->
-                        println("    Target Temperature: ${value.value}°C")
+                    programEntry.swingMode?.let { value ->
+                        print(" Swing mode: $value")
                     }
-                    ac.fcuState.indoorTemperature?.let { value ->
-                        println("    Indoor Temperature: ${value.value}°C")
-                    }
-                    ac.fcuState.outdoorTemperature?.let { value ->
-                        println("    Outdoor Temperature: ${value.value}°C")
-                    }
-                    ac.fcuState.meritAMode?.let { value ->
-                        if (printDefaults || value != MeritAMode.OFF) {
-                            println("    Merit A Mode: $value")
-                        }
-                    }
-                    ac.fcuState.meritBMode?.let { value ->
-                        if (printDefaults || value != MeritBMode.OFF) {
-                            println("    Merit B Mode: $value")
-                        }
-                    }
-                    ac.fcuState.pureIonMode?.let { value ->
-                        if (printDefaults || value != PureIonMode.OFF) {
-                            println("    Pure Ion Mode: $value")
-                        }
-                    }
-                    ac.fcuState.selfCleaningMode?.let { value ->
-                        if (printDefaults || value != SelfCleaningMode.OFF) {
-                            println("    Self Cleaning Mode: $value")
-                        }
-                    }
+                    println()
                 }
             }
         }
@@ -154,6 +164,59 @@ internal sealed interface Command {
                         else -> log.info { "Received confirmation for ${targetName.value}" }
                     }
                 }
+        }
+    }
+}
+
+private fun FCUState.prettyPrint(printDefaults: Boolean) {
+    acStatus?.let { value ->
+        println("    Status: $value")
+    }
+    acMode?.let { value ->
+        println("    Mode: $value")
+    }
+    fanMode?.let { value ->
+        if (printDefaults || value != FanMode.AUTO) {
+            println("    Fan mode: $value")
+        }
+    }
+    swingMode?.let { value ->
+        if (printDefaults || value != SwingMode.OFF) {
+            println("    Swing mode: $value")
+        }
+    }
+    powerMode?.let { value ->
+        if (printDefaults || value != PowerMode.POWER_100) {
+            println("    Power mode: $value")
+        }
+    }
+    temperature?.let { value ->
+        println("    Target Temperature: ${value.value.value}°C")
+    }
+    indoorTemperature?.let { value ->
+        println("    Indoor Temperature: ${value.value.value}°C")
+    }
+    outdoorTemperature?.let { value ->
+        println("    Outdoor Temperature: ${value.value.value}°C")
+    }
+    meritAMode?.let { value ->
+        if (printDefaults || value != MeritAMode.OFF) {
+            println("    Merit A Mode: $value")
+        }
+    }
+    meritBMode?.let { value ->
+        if (printDefaults || value != MeritBMode.OFF) {
+            println("    Merit B Mode: $value")
+        }
+    }
+    pureIonMode?.let { value ->
+        if (printDefaults || value != PureIonMode.OFF) {
+            println("    Pure Ion Mode: $value")
+        }
+    }
+    selfCleaningMode?.let { value ->
+        if (printDefaults || value != SelfCleaningMode.OFF) {
+            println("    Self Cleaning Mode: $value")
         }
     }
 }
