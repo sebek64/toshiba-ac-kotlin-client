@@ -15,7 +15,7 @@ public data class ProgramEntry(
 ) {
     internal companion object {
         fun from(str: String): ProgramEntry? {
-            if (str.isEmpty()) {
+            if (str.isEmpty() || str == "invalid") { // TODO: better representation of invalid?
                 return null
             }
             val bytes = str.hexToByteArray()

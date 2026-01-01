@@ -2,6 +2,7 @@ package toshibaac.client
 
 import toshibaac.client.http.DeviceType
 import toshibaac.client.http.GetACListResult
+import toshibaac.client.http.GetProgramSettingsResult
 import toshibaac.client.http.HttpDeviceClient
 import toshibaac.client.http.LoginResult
 import toshibaac.client.http.Password
@@ -38,6 +39,12 @@ public class DeviceClient private constructor(
     }
 
     public suspend fun getACList(): GetACListResult = httpDeviceClient.getACList(
+        tokenType = loginResult.tokenType,
+        accessToken = loginResult.accessToken,
+        consumerId = loginResult.consumerId,
+    )
+
+    public suspend fun getProgramSettings(): GetProgramSettingsResult = httpDeviceClient.getProgramSettings(
         tokenType = loginResult.tokenType,
         accessToken = loginResult.accessToken,
         consumerId = loginResult.consumerId,

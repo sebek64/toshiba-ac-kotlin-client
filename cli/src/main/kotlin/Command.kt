@@ -8,6 +8,7 @@ import kotlinx.coroutines.withTimeout
 import toshibaac.client.DeviceClient
 import toshibaac.client.http.ACName
 import toshibaac.client.http.GetACListResult
+import toshibaac.client.http.GetProgramSettingsResult
 import toshibaac.client.iot.IncomingEvent
 import toshibaac.client.iot.MessageId
 import toshibaac.client.iot.OutgoingEvent
@@ -108,6 +109,63 @@ internal sealed interface Command {
                             println("    Self Cleaning Mode: $value")
                         }
                     }
+                }
+            }
+        }
+    }
+
+    class QuerySchedule : Command {
+        override suspend fun execute(
+            deviceClient: SuspendLazy<DeviceClient>,
+            iotClientWrapper: LazyCloseable<IoTClientWrapper>,
+        ) {
+            deviceClient.get().getProgramSettings().groupSettings.forEach { groupSetting ->
+                println("Group: ${groupSetting.groupName.value}")
+                groupSetting.programSetting.prettyPrint("  ")
+                groupSetting.acSettings.forEach { acSetting ->
+                    println("  AC: ${acSetting.name.value}")
+                    acSetting.programSetting.prettyPrint("    ")
+                }
+            }
+        }
+
+        private fun GetProgramSettingsResult.ProgramSetting.prettyPrint(prefix: String) {
+            sunday.prettyPrint(prefix = prefix, dayName = "Sunday")
+            monday.prettyPrint(prefix = prefix, dayName = "Monday")
+            tuesday.prettyPrint(prefix = prefix, dayName = "Tuesday")
+            wednesday.prettyPrint(prefix = prefix, dayName = "Wednesday")
+            thursday.prettyPrint(prefix = prefix, dayName = "Thursday")
+            friday.prettyPrint(prefix = prefix, dayName = "Friday")
+            saturday.prettyPrint(prefix = prefix, dayName = "Saturday")
+        }
+
+        private fun GetProgramSettingsResult.ProgramSetting.Program.prettyPrint(
+            prefix: String,
+            dayName: String,
+        ) {
+            println("$prefix$dayName:")
+            listOf(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10).forEach { programEntry ->
+                if (programEntry != null) {
+                    print("  $prefix${programEntry.hours.value}:${programEntry.minutes.value} -> ${programEntry.acStatus}")
+                    programEntry.acMode?.let { value ->
+                        print(" Mode: $value")
+                    }
+                    programEntry.temperature?.let { value ->
+                        print(" Target Temperature: ${value.value.value}°C")
+                    }
+                    programEntry.fanMode?.let { value ->
+                        print(" Fan mode: $value")
+                    }
+                    programEntry.meritAMode?.let { value ->
+                        print(" Merit A Mode: $value")
+                    }
+                    programEntry.meritBMode?.let { value ->
+                        print(" Merit B Mode: $value")
+                    }
+                    programEntry.swingMode?.let { value ->
+                        print(" Swing mode: $value")
+                    }
+                    println()
                 }
             }
         }

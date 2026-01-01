@@ -22,7 +22,6 @@ The command-line tool is located in the `cli` module.
 * Make the library available in a public Maven repository.
 * Unit-test the small amount of business logic that is present (most of the code is just the protocol implementation).
 * Correctly deserialize all heartbeat fields (hex-strings).
-* Support querying schedule via http api.
 * Support changing of schedule (not sure how, some sort of reverse engineering is needed).
 * Support more features in the FCUState (timers indicators, for example).
 * Support timers querying and setting.

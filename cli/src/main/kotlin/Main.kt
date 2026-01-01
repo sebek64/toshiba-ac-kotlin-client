@@ -44,6 +44,7 @@ public suspend fun main(args: Array<String>) {
     ToshibaCLICommand(mutableContextBuilder)
         .subcommands(
             StatusCommand(mutableContextBuilder),
+            QueryScheduleCommand(mutableContextBuilder),
             SetParametersCommand(mutableContextBuilder),
         )
         .main(args)
@@ -154,6 +155,14 @@ private class StatusCommand(
             printDefaults = printDefaults,
             listenForUpdatesFor = listenForUpdatesFor,
         )
+    }
+}
+
+private class QueryScheduleCommand(
+    private val mutableContextBuilder: MutableContextBuilder,
+) : CliktCommand() {
+    override fun run() {
+        mutableContextBuilder += Command.QuerySchedule()
     }
 }
 
