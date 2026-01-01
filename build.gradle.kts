@@ -51,4 +51,19 @@ allprojects {
             explicitApi()
         }
     }
+
+    tasks.withType<Jar> {
+        archiveBaseName = project.path
+            .split(":")
+            .drop(1)
+            .dropLast(1)
+            .let { components ->
+                val lastComponent = if (project.name == "root") {
+                    emptyList()
+                } else {
+                    listOf(project.name)
+                }
+                (listOf(rootProject.name) + components + lastComponent).joinToString("-")
+            }
+    }
 }
