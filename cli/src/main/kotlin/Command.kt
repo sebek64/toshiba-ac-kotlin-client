@@ -80,13 +80,13 @@ internal sealed interface Command {
                         }
                     }
                     ac.fcuState.temperature?.let { value ->
-                        println("    Target Temperature: ${value.value}°C")
+                        println("    Target Temperature: ${value.value.value}°C")
                     }
                     ac.fcuState.indoorTemperature?.let { value ->
-                        println("    Indoor Temperature: ${value.value}°C")
+                        println("    Indoor Temperature: ${value.value.value}°C")
                     }
                     ac.fcuState.outdoorTemperature?.let { value ->
-                        println("    Outdoor Temperature: ${value.value}°C")
+                        println("    Outdoor Temperature: ${value.value.value}°C")
                     }
                     ac.fcuState.meritAMode?.let { value ->
                         if (printDefaults || value != MeritAMode.OFF) {
