@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.onSubscription
 import kotlinx.coroutines.flow.take
 import toshibaac.client.DeviceClient
 import toshibaac.client.http.ACName
+import toshibaac.client.http.GetACListResult
 import toshibaac.client.iot.IncomingEvent
 import toshibaac.client.iot.MessageId
 import toshibaac.client.iot.OutgoingEvent
@@ -33,7 +34,11 @@ internal sealed interface Command {
             deviceClient: SuspendLazy<DeviceClient>,
             iotClientWrapper: LazyCloseable<IoTClientWrapper>,
         ) {
-            deviceClient.get().getACList().groups.forEach { group ->
+            deviceClient.get().getACList().print()
+        }
+
+        private fun GetACListResult.print() {
+            groups.forEach { group ->
                 println("Group: ${group.groupName.value}")
                 group.acs.forEach { ac ->
                     println("  AC: ${ac.name.value} ${ac.fcuState.acStatus}")
