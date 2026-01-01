@@ -4,8 +4,10 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.onSubscription
 import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.withTimeout
 import toshibaac.client.DeviceClient
 import toshibaac.client.http.ACName
+import toshibaac.client.http.GetACListResult
 import toshibaac.client.iot.IncomingEvent
 import toshibaac.client.iot.MessageId
 import toshibaac.client.iot.OutgoingEvent
@@ -17,6 +19,7 @@ import toshibaac.client.types.PowerMode
 import toshibaac.client.types.PureIonMode
 import toshibaac.client.types.SelfCleaningMode
 import toshibaac.client.types.SwingMode
+import kotlin.time.Duration
 
 private val log = KotlinLogging.logger {}
 
@@ -28,12 +31,30 @@ internal sealed interface Command {
 
     data class Status(
         private val printDefaults: Boolean,
+        private val listenForUpdatesFor: Duration,
     ) : Command {
         override suspend fun execute(
             deviceClient: SuspendLazy<DeviceClient>,
             iotClientWrapper: LazyCloseable<IoTClientWrapper>,
         ) {
-            deviceClient.get().getACList().groups.forEach { group ->
+            if (listenForUpdatesFor.isPositive()) {
+                withTimeout(listenForUpdatesFor) {
+                    iotClientWrapper.get().incomingEvents
+                        .onSubscription {
+                            deviceClient.get().getACList().print()
+                        }
+                        .collect { incomingEvent ->
+                            // TODO: pretty-print and resolve IDs to names
+                            println("Received update message: $incomingEvent")
+                        }
+                }
+            } else {
+                deviceClient.get().getACList().print()
+            }
+        }
+
+        private fun GetACListResult.print() {
+            groups.forEach { group ->
                 println("Group: ${group.groupName.value}")
                 group.acs.forEach { ac ->
                     println("  AC: ${ac.name.value} ${ac.fcuState.acStatus}")
