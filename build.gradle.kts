@@ -11,6 +11,9 @@ plugins {
 private val jvmTargetValue = JvmTarget.JVM_21
 
 allprojects {
+    group = "toshibaac.client"
+    version = "0.0.1-SNAPSHOT"
+
     repositories {
         mavenCentral()
     }
