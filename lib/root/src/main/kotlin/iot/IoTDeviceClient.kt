@@ -22,8 +22,8 @@ public class IoTDeviceClient private constructor(
     private val deviceId: DeviceId,
     private val client: DeviceClient,
 ) : AutoCloseable {
-    public companion object {
-        public suspend fun create(
+    internal companion object {
+        internal suspend fun create(
             hostName: IoTHostName,
             deviceId: DeviceId,
             sasToken: IoTSasToken,
