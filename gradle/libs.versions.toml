@@ -4,8 +4,8 @@
 clikt = { group = "com.github.ajalt.clikt", name = "clikt", version = "5.1.0" }
 kotlin-logging = { group = "io.github.oshai", name = "kotlin-logging", version = "7.0.14" }
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version = "1.10.2" }
-kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version = "1.9.0" }
-logback-classic = { group = "ch.qos.logback", name = "logback-classic", version = "1.5.25" }
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version = "1.10.0" }
+logback-classic = { group = "ch.qos.logback", name = "logback-classic", version = "1.5.26" }
 microsoft-iot-client = { group = "com.microsoft.azure.sdk.iot", name = "iot-device-client", version = "2.5.0" }
 slf4j-api = { group = "org.slf4j", name = "slf4j-api", version = "2.0.17" }
 
