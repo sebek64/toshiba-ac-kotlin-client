@@ -2,7 +2,7 @@
 
 [libraries]
 clikt = { group = "com.github.ajalt.clikt", name = "clikt", version = "5.1.0" }
-kotlin-logging = { group = "io.github.oshai", name = "kotlin-logging", version = "8.0.02" }
+kotlin-logging = { group = "io.github.oshai", name = "kotlin-logging", version = "8.0.03" }
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version = "1.11.0" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version = "1.11.0" }
 logback-classic = { group = "ch.qos.logback", name = "logback-classic", version = "1.5.32" }
