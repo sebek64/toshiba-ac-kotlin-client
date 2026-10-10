@@ -1,6 +1,5 @@
 package toshibaac.client.types
 
-@OptIn(ExperimentalStdlibApi::class)
 public data class FCUState(
     val acStatus: ACStatus?,
     val acMode: ACMode?,

@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalStdlibApi::class)
-
 package toshibaac.client.types
 
 public data class ProgramEntry(
