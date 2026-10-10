@@ -57,6 +57,7 @@ internal class HttpDeviceClient internal constructor(
         ) { ApiResponse.deserialize(it) }
         return LoginResult(
             accessToken = AccessToken(response.access_token),
+            refreshToken = RefreshToken(response.refresh_token),
             tokenType = TokenType(response.token_type),
             expiresIn = ExpiresIn(response.expires_in),
             consumerId = ConsumerId(response.consumerId),

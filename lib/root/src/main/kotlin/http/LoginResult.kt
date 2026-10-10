@@ -2,6 +2,7 @@ package toshibaac.client.http
 
 internal data class LoginResult(
     val accessToken: AccessToken,
+    val refreshToken: RefreshToken,
     val tokenType: TokenType,
     val expiresIn: ExpiresIn,
     val consumerId: ConsumerId,
