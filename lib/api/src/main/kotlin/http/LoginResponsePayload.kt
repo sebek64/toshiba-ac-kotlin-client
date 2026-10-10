@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 public data class LoginResponsePayload(
     val access_token: String,
+    val refresh_token: String,
     val token_type: String,
     val expires_in: Long,
     val consumerId: String,
