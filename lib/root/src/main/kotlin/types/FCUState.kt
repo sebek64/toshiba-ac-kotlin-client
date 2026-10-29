@@ -34,6 +34,8 @@ public data class FCUState(
     val motionTrackingStatus: MotionTrackingStatus?,
     /** Raw high byte of the error code on light commercial and VRF models. Reported by the AC only, never sent. */
     val errorCodeHigh: Int?,
+    /** Reported by the AC only, never sent. */
+    val airQuality: AirQuality?,
 ) {
     internal companion object {
         fun from(str: String): FCUState {
@@ -178,6 +180,30 @@ public data class FCUState(
                 errorCodeHigh = when (val code = bytes.getOrNull(22)?.toInt()?.and(0xFF)) {
                     0xFF -> null
                     else -> code
+                },
+                airQuality = when {
+                    bytes.size < 28 || (23..27).all { bytes[it] == 0xFF.toByte() } -> null
+                    else -> AirQuality(
+                        level = when (bytes[23]) {
+                            0x01.toByte() -> AirQuality.Level.GOOD
+                            0x02.toByte() -> AirQuality.Level.MODERATE
+                            0x03.toByte() -> AirQuality.Level.UNHEALTHY
+                            0x04.toByte() -> AirQuality.Level.VERY_UNHEALTHY
+                            else -> null
+                        },
+                        pm25 = when (val value = bytes[24].toInt() and 0xFF) {
+                            0xFF -> null
+                            else -> value
+                        },
+                        pm10 = when (val value = bytes[25].toInt() and 0xFF) {
+                            0xFF -> null
+                            else -> value
+                        },
+                        co2 = when (val value = ((bytes[26].toInt() and 0xFF) shl 8) or (bytes[27].toInt() and 0xFF)) {
+                            0xFFFF -> null
+                            else -> value
+                        },
+                    )
                 },
             )
         }

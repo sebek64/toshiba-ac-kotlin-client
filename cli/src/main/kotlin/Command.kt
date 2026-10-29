@@ -274,6 +274,15 @@ private fun FCUState.prettyPrint(printDefaults: Boolean) {
             println("    Error Code High Byte: ${value.toString(16).uppercase().padStart(2, '0')}")
         }
     }
+    airQuality?.let { value ->
+        val parts = listOfNotNull(
+            value.level?.toString(),
+            value.pm25?.let { "PM2.5 $it µg/m³" },
+            value.pm10?.let { "PM10 $it µg/m³" },
+            value.co2?.let { "CO₂ $it ppm" },
+        )
+        println("    Air Quality: ${parts.joinToString(", ")}")
+    }
     timer?.let { value ->
         when (value) {
             Timer.None -> if (printDefaults) println("    Timer: NONE")
