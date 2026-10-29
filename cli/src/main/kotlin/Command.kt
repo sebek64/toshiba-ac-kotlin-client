@@ -223,4 +223,9 @@ private fun FCUState.prettyPrint(printDefaults: Boolean) {
             println("    Self Cleaning Mode: $value")
         }
     }
+    defrost?.let { value ->
+        if (printDefaults || value.strong || value.onDemand) {
+            println("    Strong Defrost: ${value.strong}, On-demand Defrost: ${value.onDemand}")
+        }
+    }
 }

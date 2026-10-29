@@ -1,6 +1,7 @@
 package toshibaac.cli
 
 import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.core.UsageError
 import com.github.ajalt.clikt.core.main
 import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.groups.default
@@ -26,13 +27,13 @@ import toshibaac.client.http.Password
 import toshibaac.client.http.Username
 import toshibaac.client.types.ACMode
 import toshibaac.client.types.ACStatus
+import toshibaac.client.types.Defrost
 import toshibaac.client.types.FCUState
 import toshibaac.client.types.FanMode
 import toshibaac.client.types.MeritAMode
 import toshibaac.client.types.MeritBMode
 import toshibaac.client.types.PowerMode
 import toshibaac.client.types.PureIonMode
-import toshibaac.client.types.SelfCleaningMode
 import toshibaac.client.types.SwingMode
 import toshibaac.client.types.TargetTemperature
 import toshibaac.client.types.Temperature
@@ -248,13 +249,18 @@ private class SetParametersCommand(
             "off" to PureIonMode.OFF,
         )
 
-    private val selfCleaningMode: SelfCleaningMode? by option(help = "Target Self Cleaning mode")
+    private val strongDefrost: Boolean? by option(help = "Target strong defrost setting (heat/auto mode only)")
         .choice(
-            "on" to SelfCleaningMode.ON,
-            "off" to SelfCleaningMode.OFF,
+            "on" to true,
+            "off" to false,
         )
 
+    private val defrostNow: Boolean by option(help = "Request on-demand defrost; requires --strong-defrost").flag()
+
     override fun run() {
+        if (defrostNow && strongDefrost == null) {
+            throw UsageError("--defrost-now requires --strong-defrost")
+        }
         mutableContextBuilder += Command.SetParameters(
             acNames = acNames,
             fcuState = FCUState(
@@ -269,7 +275,8 @@ private class SetParametersCommand(
                 pureIonMode = pureIonMode,
                 indoorTemperature = null,
                 outdoorTemperature = null,
-                selfCleaningMode = selfCleaningMode,
+                selfCleaningMode = null,
+                defrost = strongDefrost?.let { Defrost(strong = it, onDemand = defrostNow) },
             ),
         )
     }

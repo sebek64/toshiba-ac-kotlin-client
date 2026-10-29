@@ -16,7 +16,9 @@ public data class FCUState(
     // 3x some timer fields
     //   010100 for timer setting
     //   0a0000 for timer clear
+    /** Reported by the AC only, never sent. */
     val selfCleaningMode: SelfCleaningMode?,
+    val defrost: Defrost?,
     // unknown field
     // schedule status 00 - disabled, 01 - enabled
     // off-timer hours
@@ -106,11 +108,17 @@ public data class FCUState(
                 },
                 indoorTemperature = Temperature.fromRaw(bytes[8])?.let { IndoorTemperature(it) },
                 outdoorTemperature = Temperature.fromRaw(bytes[9])?.let { OutdoorTemperature(it) },
-                selfCleaningMode = when (bytes[14]) {
-                    0x10.toByte() -> SelfCleaningMode.OFF
-                    0x18.toByte() -> SelfCleaningMode.ON
+                selfCleaningMode = when {
+                    bytes[14] == 0xFF.toByte() -> null
+                    (bytes[14].toInt() and 0x18) == 0x18 -> SelfCleaningMode.ON
+                    else -> SelfCleaningMode.OFF
+                },
+                defrost = when (bytes[14]) {
                     0xFF.toByte() -> null
-                    else -> throw IllegalArgumentException("Invalid SelfCleaningMode byte: ${bytes[14]}")
+                    else -> Defrost(
+                        strong = (bytes[14].toInt() and 0x01) != 0,
+                        onDemand = (bytes[14].toInt() and 0x02) != 0,
+                    )
                 },
             )
         }
@@ -190,10 +198,9 @@ public data class FCUState(
             0xff.toByte(),
             0xff.toByte(),
             0xff.toByte(),
-            when (selfCleaningMode) {
-                SelfCleaningMode.OFF -> 0x10.toByte()
-                SelfCleaningMode.ON -> 0x18.toByte()
+            when (defrost) {
                 null -> 0xff.toByte()
+                else -> ((if (defrost.strong) 0x01 else 0x00) or (if (defrost.onDemand) 0x02 else 0x00)).toByte()
             },
             0xff.toByte(),
             0xff.toByte(),
