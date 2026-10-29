@@ -12,7 +12,6 @@ import toshibaac.client.http.Password
 import toshibaac.client.http.Session
 import toshibaac.client.http.TokenType
 import toshibaac.client.http.Username
-import toshibaac.client.iot.IncomingEvent
 import toshibaac.client.iot.IoTDeviceClient
 import java.time.Duration
 import java.time.Instant
@@ -69,8 +68,6 @@ public class DeviceClient private constructor(
 
     public suspend fun registerAndLaunchIoTClient(
         deviceId: DeviceId,
-        onIncomingEvent: (IncomingEvent) -> Unit,
-        onConnectionLost: (Throwable) -> Unit,
     ): IoTDeviceClient {
         val registerResult = httpDeviceClient.registerMobileDevice(
             tokenType = session.tokenType,
@@ -83,8 +80,6 @@ public class DeviceClient private constructor(
             hostName = registerResult.hostName,
             deviceId = registerResult.deviceId,
             sasToken = registerResult.sasToken,
-            onIncomingEvent = onIncomingEvent,
-            onConnectionLost = onConnectionLost,
         )
     }
 }

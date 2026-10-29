@@ -9,6 +9,8 @@ import com.microsoft.azure.sdk.iot.device.transport.NoRetry
 import com.microsoft.azure.sdk.iot.device.twin.DirectMethodResponse
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.ReceiveChannel
 import toshibaac.api.iot.IncomingSMMobileMethodCall
 import toshibaac.api.iot.OutgoingIoTMessage
 import toshibaac.client.DeviceId
@@ -24,15 +26,15 @@ private val log = KotlinLogging.logger {}
 public class IoTDeviceClient private constructor(
     private val deviceId: DeviceId,
     private val client: DeviceClient,
+    private val events: Channel<IncomingEvent>,
 ) : AutoCloseable {
     internal companion object {
         internal suspend fun create(
             hostName: IoTHostName,
             deviceId: DeviceId,
             sasToken: IoTSasToken,
-            onIncomingEvent: (IncomingEvent) -> Unit,
-            onConnectionLost: (Throwable) -> Unit,
         ): IoTDeviceClient {
+            val events = Channel<IncomingEvent>(Channel.UNLIMITED)
             val client = DeviceClient(
                 hostName.value,
                 deviceId.value,
@@ -48,7 +50,7 @@ public class IoTDeviceClient private constructor(
                     if (context.newStatus != IotHubConnectionStatus.CONNECTED &&
                         context.newStatusReason != IotHubConnectionStatusChangeReason.CLIENT_CLOSE
                     ) {
-                        onConnectionLost(
+                        events.close(
                             context.cause ?: IllegalStateException("IoT connection lost: ${context.newStatusReason}"),
                         )
                     }
@@ -66,7 +68,7 @@ public class IoTDeviceClient private constructor(
                         }
                         val payloadStr = payload.payloadAsJsonString
                         log.debug { "Received method call with payload $payloadStr" }
-                        onIncomingEvent(
+                        events.trySend(
                             IncomingSMMobileMethodCall
                                 .deserialize(payloadStr)
                                 .parse(),
@@ -85,6 +87,7 @@ public class IoTDeviceClient private constructor(
                     val deviceClient = IoTDeviceClient(
                         deviceId = deviceId,
                         client = client,
+                        events = events,
                     )
                     ready.complete(deviceClient)
                 },
@@ -93,6 +96,12 @@ public class IoTDeviceClient private constructor(
             return ready.await()
         }
     }
+
+    /**
+     * Hot stream of incoming events, buffered since the client was created. Intended for a single consumer.
+     * Closed by [close], or with the cause when the connection is lost.
+     */
+    public val incomingEvents: ReceiveChannel<IncomingEvent> get() = events
 
     public suspend fun sendEvent(
         outgoingEvent: OutgoingEvent,
@@ -130,6 +139,7 @@ public class IoTDeviceClient private constructor(
 
     override fun close() {
         client.close()
+        events.close()
     }
 }
 

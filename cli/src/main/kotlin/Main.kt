@@ -60,15 +60,14 @@ public suspend fun main(args: Array<String>) {
                 )
             }.use { deviceClient ->
                 LazyCloseable {
-                    IoTClientWrapper.create(
-                        deviceClient = deviceClient.get(),
+                    deviceClient.get().registerAndLaunchIoTClient(
                         deviceId = context.deviceId,
                     )
-                }.use { iotClientWrapper ->
+                }.use { iotClient ->
                     context.commands.forEach { command ->
                         command.execute(
                             deviceClient = deviceClient,
-                            iotClientWrapper = iotClientWrapper,
+                            iotClient = iotClient,
                         )
                     }
                 }
