@@ -1,8 +1,14 @@
 package toshibaac.client.types
 
+import java.time.LocalTime
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
+
 public data class FCUState(
     val acStatus: ACStatus?,
     val acMode: ACMode?,
+    /** Without the 8°C offset; when sending it in 8°C heating, [meritAMode] must be set as well. */
     val temperature: TargetTemperature?,
     val fanMode: FanMode?,
     val swingMode: SwingMode?,
@@ -12,26 +18,45 @@ public data class FCUState(
     val pureIonMode: PureIonMode?,
     val indoorTemperature: IndoorTemperature?,
     val outdoorTemperature: OutdoorTemperature?,
-    // unknown field
-    // 3x some timer fields
-    //   010100 for timer setting
-    //   0a0000 for timer clear
+    /** Reported by the AC only, never sent. */
+    val errorCode: ACErrorCode?,
+    /** When sending [Timer.None], set [acStatus] as well, the clear command differs for an AC that is off. */
+    val timer: Timer?,
+    /** Reported by the AC only, never sent. */
     val selfCleaningMode: SelfCleaningMode?,
-    // unknown field
-    // schedule status 00 - disabled, 01 - enabled
-    // off-timer hours
-    // off-timer minutes
+    val defrost: Defrost?,
+    /** LED on the Wi-Fi adapter. */
+    val wifiLedStatus: WifiLedStatus?,
+    val schedulerStatus: SchedulerStatus?,
+    val smartSensingStatus: SmartSensingStatus?,
+    /** The app resets it to [AirDirection.None] whenever [swingMode] is set to anything but off. */
+    val airDirection: AirDirection?,
+    val motionTrackingStatus: MotionTrackingStatus?,
+    /** Raw high byte of the error code on light commercial and VRF models. Reported by the AC only, never sent. */
+    val errorCodeHigh: Int?,
+    /** Reported by the AC only, never sent. */
+    val airQuality: AirQuality?,
 ) {
     internal companion object {
         fun from(str: String): FCUState {
             val bytes = str.hexToByteArray()
+
+            fun scheduledTimer(create: (Duration, LocalTime) -> Timer): Timer? {
+                val delayHours = bytes[12].toInt() and 0xFF
+                val delayMinutes = bytes[13].toInt() and 0xFF
+                val setAtHour = bytes[17].toInt() and 0xFF
+                val setAtMinute = bytes[18].toInt() and 0xFF
+                return when {
+                    delayHours == 0xFF || delayMinutes == 0xFF || setAtHour > 23 || setAtMinute > 59 -> null
+                    else -> create(delayHours.hours + delayMinutes.minutes, LocalTime.of(setAtHour, setAtMinute))
+                }
+            }
+
             return FCUState(
                 acStatus = when (bytes[0]) {
                     0x30.toByte() -> ACStatus.ON
                     0x31.toByte() -> ACStatus.OFF
-                    0x02.toByte() -> null // TODO: how to represent better?
-                    0xFF.toByte() -> null
-                    else -> throw IllegalArgumentException("Invalid ACStatus byte: ${bytes[0]}")
+                    else -> null
                 },
                 acMode = when (bytes[1]) {
                     0x41.toByte() -> ACMode.AUTO
@@ -39,11 +64,9 @@ public data class FCUState(
                     0x43.toByte() -> ACMode.HEAT
                     0x44.toByte() -> ACMode.DRY
                     0x45.toByte() -> ACMode.FAN
-                    0xFF.toByte() -> null
-                    0x00.toByte() -> null // TODO: how to represent better?
-                    else -> throw IllegalArgumentException("Invalid ACMode byte: ${bytes[1]}")
+                    else -> null
                 },
-                temperature = Temperature.fromRaw(bytes[2])?.let { TargetTemperature(it) },
+                temperature = Temperature.fromRaw(bytes[2])?.let { TargetTemperature(it.fromHeating8CRaw(bytes[6])) },
                 fanMode = when (bytes[3]) {
                     0x41.toByte() -> FanMode.AUTO
                     0x31.toByte() -> FanMode.QUIET
@@ -52,9 +75,7 @@ public data class FCUState(
                     0x34.toByte() -> FanMode.MEDIUM
                     0x35.toByte() -> FanMode.MEDIUM_HIGH
                     0x36.toByte() -> FanMode.HIGH
-                    0x00.toByte() -> null // TODO: how to represent better?
-                    0xFF.toByte() -> null
-                    else -> throw IllegalArgumentException("Invalid FanMode byte: ${bytes[3]}")
+                    else -> null
                 },
                 swingMode = when (bytes[4]) {
                     0x31.toByte() -> SwingMode.OFF
@@ -66,26 +87,28 @@ public data class FCUState(
                     0x52.toByte() -> SwingMode.FIXED_3
                     0x53.toByte() -> SwingMode.FIXED_4
                     0x54.toByte() -> SwingMode.FIXED_5
-                    0x00.toByte() -> null // TODO: how to represent better?
-                    0xFF.toByte() -> null
-                    else -> throw IllegalArgumentException("Invalid SwingMode byte: ${bytes[4]}")
+                    0x60.toByte() -> SwingMode.HADA
+                    0x61.toByte() -> SwingMode.FIXED_HORIZONTAL_1
+                    0x62.toByte() -> SwingMode.FIXED_HORIZONTAL_2
+                    0x63.toByte() -> SwingMode.FIXED_HORIZONTAL_3
+                    0x64.toByte() -> SwingMode.FIXED_HORIZONTAL_4
+                    0x65.toByte() -> SwingMode.FIXED_HORIZONTAL_5
+                    else -> null
                 },
                 powerMode = when (bytes[5]) {
                     50.toByte() -> PowerMode.POWER_50
                     75.toByte() -> PowerMode.POWER_75
                     100.toByte() -> PowerMode.POWER_100
-                    0xFF.toByte() -> null
-                    else -> throw IllegalArgumentException("Invalid PowerMode byte: ${bytes[5]}")
+                    else -> null
                 },
-                meritBMode = when (val halfByte = (bytes[6].toUInt() shr 4).toByte()) {
-                    0x03.toByte() -> MeritBMode.FIREPLACE_1
-                    0x02.toByte() -> MeritBMode.FIREPLACE_2
+                meritBMode = when ((bytes[6].toUInt() shr 4).toByte()) {
+                    0x02.toByte() -> MeritBMode.FIREPLACE_1
+                    0x03.toByte() -> MeritBMode.FIREPLACE_2
                     0x01.toByte() -> MeritBMode.OFF
                     0x00.toByte() -> MeritBMode.OFF
-                    (-1).toByte() -> null
-                    else -> throw IllegalArgumentException("Invalid MeritBMode half-byte: $halfByte")
+                    else -> null
                 },
-                meritAMode = when (val halfByte = bytes[6].toUInt() and 0x0Fu) {
+                meritAMode = when (bytes[6].toUInt() and 0x0Fu) {
                     0x01u -> MeritAMode.HIGH_POWER
                     0x02u -> MeritAMode.CDU_SILENT_1
                     0x03u -> MeritAMode.ECO
@@ -95,22 +118,92 @@ public data class FCUState(
                     0x07u -> MeritAMode.COMFORT
                     0x0Au -> MeritAMode.CDU_SILENT_2
                     0x00u -> MeritAMode.OFF
-                    0x0Fu -> null
-                    else -> throw IllegalArgumentException("Invalid MeritAMode half-byte: $halfByte")
+                    else -> null
                 },
                 pureIonMode = when (bytes[7]) {
                     0x10.toByte() -> PureIonMode.OFF
                     0x18.toByte() -> PureIonMode.ON
-                    0xFF.toByte() -> null
-                    else -> throw IllegalArgumentException("Invalid PureIonMode byte: ${bytes[7]}")
+                    else -> null
                 },
                 indoorTemperature = Temperature.fromRaw(bytes[8])?.let { IndoorTemperature(it) },
                 outdoorTemperature = Temperature.fromRaw(bytes[9])?.let { OutdoorTemperature(it) },
-                selfCleaningMode = when (bytes[14]) {
-                    0x10.toByte() -> SelfCleaningMode.OFF
-                    0x18.toByte() -> SelfCleaningMode.ON
+                errorCode = when (val code = bytes[10].toInt() and 0xFF) {
+                    0xFF, 0xFE, 0x00 -> null
+                    else -> acErrorCodeOf(code)
+                },
+                timer = when (bytes[11].toInt() and 0xFF) {
+                    0x01 -> scheduledTimer(Timer.Scheduled::Off)
+                    0x03 -> scheduledTimer(Timer.Scheduled::On)
+                    0x05 -> scheduledTimer(Timer.Scheduled::OnOff)
+                    0x02, 0x04, 0x06, 0x09, 0x0A, 0x0B -> Timer.None
+                    else -> null
+                },
+                selfCleaningMode = when {
+                    bytes[14] == 0xFF.toByte() -> null
+                    (bytes[14].toInt() and 0x18) == 0x18 -> SelfCleaningMode.ON
+                    else -> SelfCleaningMode.OFF
+                },
+                defrost = when (bytes[14]) {
                     0xFF.toByte() -> null
-                    else -> throw IllegalArgumentException("Invalid SelfCleaningMode byte: ${bytes[14]}")
+                    else -> Defrost(
+                        strong = (bytes[14].toInt() and 0x01) != 0,
+                        onDemand = (bytes[14].toInt() and 0x02) != 0,
+                    )
+                },
+                wifiLedStatus = when (bytes[15]) {
+                    0x01.toByte() -> WifiLedStatus.ON
+                    0x02.toByte() -> WifiLedStatus.OFF
+                    else -> null
+                },
+                schedulerStatus = when (bytes[16]) {
+                    0x01.toByte() -> SchedulerStatus.ENABLED
+                    0x02.toByte() -> SchedulerStatus.DISABLED
+                    else -> null
+                },
+                smartSensingStatus = when (bytes.getOrNull(19)) {
+                    0x10.toByte() -> SmartSensingStatus.ON
+                    0x11.toByte() -> SmartSensingStatus.OFF
+                    else -> null
+                },
+                airDirection = when (val code = (bytes.getOrNull(20) ?: 0xFF.toByte()).toInt() and 0xFF) {
+                    0x20 -> AirDirection.None
+                    0x30 -> AirDirection.Indirect
+                    0x31 -> AirDirection.Direct
+                    in 0x21..0x2F -> AirDirection.Area(row = (code - 0x21) / 3, column = (code - 0x21) % 3)
+                    else -> null
+                },
+                motionTrackingStatus = when (bytes.getOrNull(21)) {
+                    0x40.toByte() -> MotionTrackingStatus.ON
+                    0x41.toByte() -> MotionTrackingStatus.OFF
+                    else -> null
+                },
+                errorCodeHigh = when (val code = bytes.getOrNull(22)?.toInt()?.and(0xFF)) {
+                    0xFF -> null
+                    else -> code
+                },
+                airQuality = when {
+                    bytes.size < 28 || (23..27).all { bytes[it] == 0xFF.toByte() } -> null
+                    else -> AirQuality(
+                        level = when (bytes[23]) {
+                            0x01.toByte() -> AirQuality.Level.GOOD
+                            0x02.toByte() -> AirQuality.Level.MODERATE
+                            0x03.toByte() -> AirQuality.Level.UNHEALTHY
+                            0x04.toByte() -> AirQuality.Level.VERY_UNHEALTHY
+                            else -> null
+                        },
+                        pm25 = when (val value = bytes[24].toInt() and 0xFF) {
+                            0xFF -> null
+                            else -> value
+                        },
+                        pm10 = when (val value = bytes[25].toInt() and 0xFF) {
+                            0xFF -> null
+                            else -> value
+                        },
+                        co2 = when (val value = ((bytes[26].toInt() and 0xFF) shl 8) or (bytes[27].toInt() and 0xFF)) {
+                            0xFFFF -> null
+                            else -> value
+                        },
+                    )
                 },
             )
         }
@@ -131,7 +224,7 @@ public data class FCUState(
                 ACMode.FAN -> 0x45.toByte()
                 null -> 0xff.toByte()
             },
-            temperature?.value.asByte,
+            temperature?.value?.toHeating8CRaw(meritAMode).asByte,
             when (fanMode) {
                 FanMode.AUTO -> 0x41.toByte()
                 FanMode.QUIET -> 0x31.toByte()
@@ -152,6 +245,12 @@ public data class FCUState(
                 SwingMode.FIXED_3 -> 0x52.toByte()
                 SwingMode.FIXED_4 -> 0x53.toByte()
                 SwingMode.FIXED_5 -> 0x54.toByte()
+                SwingMode.HADA -> 0x60.toByte()
+                SwingMode.FIXED_HORIZONTAL_1 -> 0x61.toByte()
+                SwingMode.FIXED_HORIZONTAL_2 -> 0x62.toByte()
+                SwingMode.FIXED_HORIZONTAL_3 -> 0x63.toByte()
+                SwingMode.FIXED_HORIZONTAL_4 -> 0x64.toByte()
+                SwingMode.FIXED_HORIZONTAL_5 -> 0x65.toByte()
                 null -> 0xff.toByte()
             },
             when (powerMode) {
@@ -162,8 +261,8 @@ public data class FCUState(
             },
             (
                 when (meritBMode) {
-                    MeritBMode.FIREPLACE_1 -> 0x30
-                    MeritBMode.FIREPLACE_2 -> 0x20
+                    MeritBMode.FIREPLACE_1 -> 0x20
+                    MeritBMode.FIREPLACE_2 -> 0x30
                     MeritBMode.OFF -> 0x00
                     null -> 0xf0
                 } or when (meritAMode) {
@@ -187,14 +286,65 @@ public data class FCUState(
             indoorTemperature?.value.asByte,
             outdoorTemperature?.value.asByte,
             0xff.toByte(),
-            0xff.toByte(),
-            0xff.toByte(),
-            0xff.toByte(),
-            when (selfCleaningMode) {
-                SelfCleaningMode.OFF -> 0x10.toByte()
-                SelfCleaningMode.ON -> 0x18.toByte()
+            when (timer) {
+                null, is Timer.Scheduled.OnOff -> 0xff.toByte()
+                Timer.None -> if (acStatus == ACStatus.OFF) 0x09.toByte() else 0x0a.toByte()
+                is Timer.Scheduled.Off -> 0x01.toByte()
+                is Timer.Scheduled.On -> 0x03.toByte()
+            },
+            when (timer) {
+                null, is Timer.Scheduled.OnOff -> 0xff.toByte()
+                Timer.None -> 0x00.toByte()
+                is Timer.Scheduled -> timer.delay.inWholeHours.toByte()
+            },
+            when (timer) {
+                null, is Timer.Scheduled.OnOff -> 0xff.toByte()
+                Timer.None -> 0x00.toByte()
+                is Timer.Scheduled -> (timer.delay.inWholeMinutes % 60).toByte()
+            },
+            when (defrost) {
+                null -> 0xff.toByte()
+                else -> ((if (defrost.strong) 0x01 else 0x00) or (if (defrost.onDemand) 0x02 else 0x00)).toByte()
+            },
+            when (wifiLedStatus) {
+                WifiLedStatus.ON -> 0x01.toByte()
+                WifiLedStatus.OFF -> 0x02.toByte()
                 null -> 0xff.toByte()
             },
+            when (schedulerStatus) {
+                SchedulerStatus.ENABLED -> 0x01.toByte()
+                SchedulerStatus.DISABLED -> 0x02.toByte()
+                null -> 0xff.toByte()
+            },
+            when (timer) {
+                null, is Timer.Scheduled.OnOff -> 0xff.toByte()
+                Timer.None -> 0x00.toByte()
+                is Timer.Scheduled -> timer.setAt.hour.toByte()
+            },
+            when (timer) {
+                null, is Timer.Scheduled.OnOff -> 0xff.toByte()
+                Timer.None -> 0x00.toByte()
+                is Timer.Scheduled -> timer.setAt.minute.toByte()
+            },
+            when (smartSensingStatus) {
+                SmartSensingStatus.ON -> 0x10.toByte()
+                SmartSensingStatus.OFF -> 0x11.toByte()
+                null -> 0xff.toByte()
+            },
+            when (airDirection) {
+                AirDirection.None -> 0x20.toByte()
+                AirDirection.Indirect -> 0x30.toByte()
+                AirDirection.Direct -> 0x31.toByte()
+                is AirDirection.Area -> (0x21 + airDirection.row * 3 + airDirection.column).toByte()
+                null -> 0xff.toByte()
+            },
+            when (motionTrackingStatus) {
+                MotionTrackingStatus.ON -> 0x40.toByte()
+                MotionTrackingStatus.OFF -> 0x41.toByte()
+                null -> 0xff.toByte()
+            },
+            0xff.toByte(),
+            0xff.toByte(),
             0xff.toByte(),
             0xff.toByte(),
             0xff.toByte(),

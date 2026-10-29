@@ -1,6 +1,7 @@
 package toshibaac.cli
 
 import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.core.UsageError
 import com.github.ajalt.clikt.core.main
 import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.groups.default
@@ -26,16 +27,24 @@ import toshibaac.client.http.Password
 import toshibaac.client.http.Username
 import toshibaac.client.types.ACMode
 import toshibaac.client.types.ACStatus
+import toshibaac.client.types.AirDirection
+import toshibaac.client.types.Defrost
 import toshibaac.client.types.FCUState
 import toshibaac.client.types.FanMode
 import toshibaac.client.types.MeritAMode
 import toshibaac.client.types.MeritBMode
+import toshibaac.client.types.MotionTrackingStatus
 import toshibaac.client.types.PowerMode
 import toshibaac.client.types.PureIonMode
-import toshibaac.client.types.SelfCleaningMode
+import toshibaac.client.types.SchedulerStatus
+import toshibaac.client.types.SmartSensingStatus
 import toshibaac.client.types.SwingMode
 import toshibaac.client.types.TargetTemperature
 import toshibaac.client.types.Temperature
+import toshibaac.client.types.Timer
+import toshibaac.client.types.WifiLedStatus
+import java.time.LocalTime
+import java.time.ZoneOffset
 import kotlin.concurrent.thread
 import kotlin.time.Duration
 
@@ -213,6 +222,12 @@ private class SetParametersCommand(
             "fixed_3" to SwingMode.FIXED_3,
             "fixed_4" to SwingMode.FIXED_4,
             "fixed_5" to SwingMode.FIXED_5,
+            "hada" to SwingMode.HADA,
+            "fixed_horizontal_1" to SwingMode.FIXED_HORIZONTAL_1,
+            "fixed_horizontal_2" to SwingMode.FIXED_HORIZONTAL_2,
+            "fixed_horizontal_3" to SwingMode.FIXED_HORIZONTAL_3,
+            "fixed_horizontal_4" to SwingMode.FIXED_HORIZONTAL_4,
+            "fixed_horizontal_5" to SwingMode.FIXED_HORIZONTAL_5,
         )
 
     private val powerMode: PowerMode? by option(help = "Target power mode")
@@ -248,13 +263,74 @@ private class SetParametersCommand(
             "off" to PureIonMode.OFF,
         )
 
-    private val selfCleaningMode: SelfCleaningMode? by option(help = "Target Self Cleaning mode")
+    private val strongDefrost: Boolean? by option(help = "Target strong defrost setting (heat/auto mode only)")
         .choice(
-            "on" to SelfCleaningMode.ON,
-            "off" to SelfCleaningMode.OFF,
+            "on" to true,
+            "off" to false,
         )
 
+    private val defrostNow: Boolean by option(help = "Request on-demand defrost; requires --strong-defrost").flag()
+
+    private val wifiLed: WifiLedStatus? by option(help = "Target Wi-Fi adapter LED status")
+        .choice(
+            "on" to WifiLedStatus.ON,
+            "off" to WifiLedStatus.OFF,
+        )
+
+    private val scheduler: SchedulerStatus? by option(help = "Target weekly scheduler status")
+        .choice(
+            "on" to SchedulerStatus.ENABLED,
+            "off" to SchedulerStatus.DISABLED,
+        )
+
+    private val smartSensing: SmartSensingStatus? by option(help = "Target smart sensing status")
+        .choice(
+            "on" to SmartSensingStatus.ON,
+            "off" to SmartSensingStatus.OFF,
+        )
+
+    private val airDirection: AirDirection? by option(
+        help = "Target smart sensing air direction: none, indirect, direct or a touch control area A0..E2",
+    )
+        .choice(
+            buildMap {
+                put("none", AirDirection.None)
+                put("indirect", AirDirection.Indirect)
+                put("direct", AirDirection.Direct)
+                for (row in 0..4) {
+                    for (column in 0..2) {
+                        put("${'A' + row}$column", AirDirection.Area(row, column))
+                    }
+                }
+            },
+        )
+
+    private val motionTracking: MotionTrackingStatus? by option(help = "Target smart sensing motion tracking status")
+        .choice(
+            "on" to MotionTrackingStatus.ON,
+            "off" to MotionTrackingStatus.OFF,
+        )
+
+    private val timer: Timer? by mutuallyExclusiveOptions(
+        option("--off-timer", help = "Turn the AC off after the given delay (e.g., 30m, 2h, 1h 30m)")
+            .convert { scheduledTimer(Duration.parse(it), Timer.Scheduled::Off) },
+        option("--on-timer", help = "Turn the AC on after the given delay (e.g., 30m, 2h, 1h 30m)")
+            .convert { scheduledTimer(Duration.parse(it), Timer.Scheduled::On) },
+        option("--clear-timer", help = "Clear the timer")
+            .flag()
+            .convert { value ->
+                when (value) {
+                    true -> Timer.None
+                    false -> null
+                }
+            },
+    )
+        .single()
+
     override fun run() {
+        if (defrostNow && strongDefrost == null) {
+            throw UsageError("--defrost-now requires --strong-defrost")
+        }
         mutableContextBuilder += Command.SetParameters(
             acNames = acNames,
             fcuState = FCUState(
@@ -269,8 +345,20 @@ private class SetParametersCommand(
                 pureIonMode = pureIonMode,
                 indoorTemperature = null,
                 outdoorTemperature = null,
-                selfCleaningMode = selfCleaningMode,
+                selfCleaningMode = null,
+                errorCode = null,
+                errorCodeHigh = null,
+                airQuality = null,
+                timer = timer,
+                defrost = strongDefrost?.let { Defrost(strong = it, onDemand = defrostNow) },
+                wifiLedStatus = wifiLed,
+                schedulerStatus = scheduler,
+                smartSensingStatus = smartSensing,
+                airDirection = airDirection,
+                motionTrackingStatus = motionTracking,
             ),
         )
     }
 }
+
+private fun scheduledTimer(delay: Duration, create: (Duration, LocalTime) -> Timer): Timer = create(delay, LocalTime.now(ZoneOffset.UTC))

@@ -14,14 +14,21 @@ import toshibaac.client.iot.IncomingEvent
 import toshibaac.client.iot.IoTDeviceClient
 import toshibaac.client.iot.MessageId
 import toshibaac.client.iot.OutgoingEvent
+import toshibaac.client.types.ACErrorCode
+import toshibaac.client.types.AirDirection
 import toshibaac.client.types.FCUState
 import toshibaac.client.types.FanMode
 import toshibaac.client.types.MeritAMode
 import toshibaac.client.types.MeritBMode
+import toshibaac.client.types.MotionTrackingStatus
 import toshibaac.client.types.PowerMode
 import toshibaac.client.types.PureIonMode
+import toshibaac.client.types.SchedulerStatus
 import toshibaac.client.types.SelfCleaningMode
+import toshibaac.client.types.SmartSensingStatus
 import toshibaac.client.types.SwingMode
+import toshibaac.client.types.Timer
+import toshibaac.client.types.WifiLedStatus
 import kotlin.time.Duration
 
 private val log = KotlinLogging.logger {}
@@ -203,6 +210,13 @@ private fun FCUState.prettyPrint(printDefaults: Boolean) {
     outdoorTemperature?.let { value ->
         println("    Outdoor Temperature: ${value.value.value}°C")
     }
+    errorCode?.let { value ->
+        val hex = value.code.toString(16).uppercase().padStart(2, '0')
+        when (value) {
+            is ACErrorCode.Unrecognized -> println("    Error: $hex")
+            else -> println("    Error: $hex ($value)")
+        }
+    }
     meritAMode?.let { value ->
         if (printDefaults || value != MeritAMode.OFF) {
             println("    Merit A Mode: $value")
@@ -221,6 +235,60 @@ private fun FCUState.prettyPrint(printDefaults: Boolean) {
     selfCleaningMode?.let { value ->
         if (printDefaults || value != SelfCleaningMode.OFF) {
             println("    Self Cleaning Mode: $value")
+        }
+    }
+    defrost?.let { value ->
+        if (printDefaults || value.strong || value.onDemand) {
+            println("    Strong Defrost: ${value.strong}, On-demand Defrost: ${value.onDemand}")
+        }
+    }
+    wifiLedStatus?.let { value ->
+        if (printDefaults || value != WifiLedStatus.ON) {
+            println("    Wi-Fi LED: $value")
+        }
+    }
+    schedulerStatus?.let { value ->
+        if (printDefaults || value != SchedulerStatus.DISABLED) {
+            println("    Scheduler: $value")
+        }
+    }
+    smartSensingStatus?.let { value ->
+        if (printDefaults || value != SmartSensingStatus.OFF) {
+            println("    Smart Sensing: $value")
+        }
+    }
+    airDirection?.let { value ->
+        when (value) {
+            AirDirection.None -> if (printDefaults) println("    Air Direction: None")
+            AirDirection.Indirect, AirDirection.Direct -> println("    Air Direction: $value")
+            is AirDirection.Area -> println("    Air Direction: Area ${'A' + value.row}${value.column}")
+        }
+    }
+    motionTrackingStatus?.let { value ->
+        if (printDefaults || value != MotionTrackingStatus.OFF) {
+            println("    Motion Tracking: $value")
+        }
+    }
+    errorCodeHigh?.let { value ->
+        if (printDefaults || value != 0) {
+            println("    Error Code High Byte: ${value.toString(16).uppercase().padStart(2, '0')}")
+        }
+    }
+    airQuality?.let { value ->
+        val parts = listOfNotNull(
+            value.level?.toString(),
+            value.pm25?.let { "PM2.5 $it µg/m³" },
+            value.pm10?.let { "PM10 $it µg/m³" },
+            value.co2?.let { "CO₂ $it ppm" },
+        )
+        println("    Air Quality: ${parts.joinToString(", ")}")
+    }
+    timer?.let { value ->
+        when (value) {
+            Timer.None -> if (printDefaults) println("    Timer: NONE")
+            is Timer.Scheduled.Off -> println("    Off Timer: ${value.delay} after ${value.setAt} UTC")
+            is Timer.Scheduled.On -> println("    On Timer: ${value.delay} after ${value.setAt} UTC")
+            is Timer.Scheduled.OnOff -> println("    On/Off Timer: ${value.delay} after ${value.setAt} UTC")
         }
     }
 }
