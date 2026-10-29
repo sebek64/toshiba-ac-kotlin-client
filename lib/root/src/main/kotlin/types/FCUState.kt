@@ -13,7 +13,8 @@ public data class FCUState(
     val pureIonMode: PureIonMode?,
     val indoorTemperature: IndoorTemperature?,
     val outdoorTemperature: OutdoorTemperature?,
-    // unknown field
+    /** Reported by the AC only, never sent. */
+    val errorCode: ACErrorCode?,
     // 3x some timer fields
     //   010100 for timer setting
     //   0a0000 for timer clear
@@ -103,6 +104,10 @@ public data class FCUState(
                 },
                 indoorTemperature = Temperature.fromRaw(bytes[8])?.let { IndoorTemperature(it) },
                 outdoorTemperature = Temperature.fromRaw(bytes[9])?.let { OutdoorTemperature(it) },
+                errorCode = when (val code = bytes[10].toInt() and 0xFF) {
+                    0xFF, 0xFE, 0x00 -> null
+                    else -> acErrorCodeOf(code)
+                },
                 selfCleaningMode = when {
                     bytes[14] == 0xFF.toByte() -> null
                     (bytes[14].toInt() and 0x18) == 0x18 -> SelfCleaningMode.ON

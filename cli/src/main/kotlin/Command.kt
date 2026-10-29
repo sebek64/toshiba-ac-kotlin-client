@@ -14,6 +14,7 @@ import toshibaac.client.iot.IncomingEvent
 import toshibaac.client.iot.IoTDeviceClient
 import toshibaac.client.iot.MessageId
 import toshibaac.client.iot.OutgoingEvent
+import toshibaac.client.types.ACErrorCode
 import toshibaac.client.types.FCUState
 import toshibaac.client.types.FanMode
 import toshibaac.client.types.MeritAMode
@@ -202,6 +203,13 @@ private fun FCUState.prettyPrint(printDefaults: Boolean) {
     }
     outdoorTemperature?.let { value ->
         println("    Outdoor Temperature: ${value.value.value}°C")
+    }
+    errorCode?.let { value ->
+        val hex = value.code.toString(16).uppercase().padStart(2, '0')
+        when (value) {
+            is ACErrorCode.Unrecognized -> println("    Error: $hex")
+            else -> println("    Error: $hex ($value)")
+        }
     }
     meritAMode?.let { value ->
         if (printDefaults || value != MeritAMode.OFF) {

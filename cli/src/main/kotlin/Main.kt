@@ -282,6 +282,7 @@ private class SetParametersCommand(
                 indoorTemperature = null,
                 outdoorTemperature = null,
                 selfCleaningMode = null,
+                errorCode = null,
                 defrost = strongDefrost?.let { Defrost(strong = it, onDemand = defrostNow) },
             ),
         )
