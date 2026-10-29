@@ -21,9 +21,13 @@ internal class IoTClientWrapper private constructor(
             return IoTClientWrapper(
                 iotClient = deviceClient.registerAndLaunchIoTClient(
                     deviceId = deviceId,
-                ) { incomingEvent ->
-                    events.trySend(incomingEvent)
-                },
+                    onIncomingEvent = { incomingEvent ->
+                        events.trySend(incomingEvent)
+                    },
+                    onConnectionLost = { cause ->
+                        events.close(cause)
+                    },
+                ),
                 events = events,
             )
         }

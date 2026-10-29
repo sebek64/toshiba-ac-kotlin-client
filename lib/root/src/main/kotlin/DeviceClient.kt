@@ -70,6 +70,7 @@ public class DeviceClient private constructor(
     public suspend fun registerAndLaunchIoTClient(
         deviceId: DeviceId,
         onIncomingEvent: (IncomingEvent) -> Unit,
+        onConnectionLost: (Throwable) -> Unit,
     ): IoTDeviceClient {
         val registerResult = httpDeviceClient.registerMobileDevice(
             tokenType = session.tokenType,
@@ -83,6 +84,7 @@ public class DeviceClient private constructor(
             deviceId = registerResult.deviceId,
             sasToken = registerResult.sasToken,
             onIncomingEvent = onIncomingEvent,
+            onConnectionLost = onConnectionLost,
         )
     }
 }
