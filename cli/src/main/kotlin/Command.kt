@@ -3,6 +3,7 @@ package toshibaac.cli
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.withTimeout
 import toshibaac.client.DeviceClient
@@ -10,6 +11,7 @@ import toshibaac.client.http.ACName
 import toshibaac.client.http.GetACListResult
 import toshibaac.client.http.GetProgramSettingsResult
 import toshibaac.client.iot.IncomingEvent
+import toshibaac.client.iot.IoTDeviceClient
 import toshibaac.client.iot.MessageId
 import toshibaac.client.iot.OutgoingEvent
 import toshibaac.client.types.FCUState
@@ -27,7 +29,7 @@ private val log = KotlinLogging.logger {}
 internal sealed interface Command {
     suspend fun execute(
         deviceClient: SuspendLazy<DeviceClient>,
-        iotClientWrapper: LazyCloseable<IoTClientWrapper>,
+        iotClient: LazyCloseable<IoTDeviceClient>,
     )
 
     data class Status(
@@ -36,11 +38,12 @@ internal sealed interface Command {
     ) : Command {
         override suspend fun execute(
             deviceClient: SuspendLazy<DeviceClient>,
-            iotClientWrapper: LazyCloseable<IoTClientWrapper>,
+            iotClient: LazyCloseable<IoTDeviceClient>,
         ) {
             if (listenForUpdatesFor.isPositive()) {
                 withTimeout(listenForUpdatesFor) {
-                    iotClientWrapper.get().incomingEvents
+                    iotClient.get().incomingEvents
+                        .receiveAsFlow()
                         .onStart {
                             deviceClient.get().getACList().prettyPrint()
                         }
@@ -68,7 +71,7 @@ internal sealed interface Command {
     class QuerySchedule : Command {
         override suspend fun execute(
             deviceClient: SuspendLazy<DeviceClient>,
-            iotClientWrapper: LazyCloseable<IoTClientWrapper>,
+            iotClient: LazyCloseable<IoTDeviceClient>,
         ) {
             deviceClient.get().getProgramSettings().groupSettings.forEach { groupSetting ->
                 println("Group: ${groupSetting.groupName.value}")
@@ -129,7 +132,7 @@ internal sealed interface Command {
     ) : Command {
         override suspend fun execute(
             deviceClient: SuspendLazy<DeviceClient>,
-            iotClientWrapper: LazyCloseable<IoTClientWrapper>,
+            iotClient: LazyCloseable<IoTDeviceClient>,
         ) {
             val acList = deviceClient.get().getACList()
             val acs = acList.groups.flatMap { it.acs }
@@ -137,11 +140,12 @@ internal sealed interface Command {
                 val ac = acs.firstOrNull { it.name == name } ?: error("AC $name not found")
                 ac.deviceUniqueId
             }
-            val iotClient = iotClientWrapper.get()
+            val client = iotClient.get()
             val messageId = MessageId.random()
-            iotClient.incomingEvents
+            client.incomingEvents
+                .receiveAsFlow()
                 .onStart {
-                    iotClient.iotClient.sendEvent(
+                    client.sendEvent(
                         OutgoingEvent.SetFCUParameters(
                             targetId = uidToName.keys.toList(),
                             messageId = messageId,
