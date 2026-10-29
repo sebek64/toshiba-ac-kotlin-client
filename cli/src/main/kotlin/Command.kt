@@ -21,6 +21,7 @@ import toshibaac.client.types.MeritAMode
 import toshibaac.client.types.MeritBMode
 import toshibaac.client.types.PowerMode
 import toshibaac.client.types.PureIonMode
+import toshibaac.client.types.SchedulerStatus
 import toshibaac.client.types.SelfCleaningMode
 import toshibaac.client.types.SwingMode
 import toshibaac.client.types.WifiLedStatus
@@ -240,6 +241,11 @@ private fun FCUState.prettyPrint(printDefaults: Boolean) {
     wifiLedStatus?.let { value ->
         if (printDefaults || value != WifiLedStatus.ON) {
             println("    Wi-Fi LED: $value")
+        }
+    }
+    schedulerStatus?.let { value ->
+        if (printDefaults || value != SchedulerStatus.DISABLED) {
+            println("    Scheduler: $value")
         }
     }
 }

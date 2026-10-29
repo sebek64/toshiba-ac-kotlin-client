@@ -23,7 +23,7 @@ public data class FCUState(
     val defrost: Defrost?,
     /** LED on the Wi-Fi adapter. */
     val wifiLedStatus: WifiLedStatus?,
-    // schedule status 00 - disabled, 01 - enabled
+    val schedulerStatus: SchedulerStatus?,
     // off-timer hours
     // off-timer minutes
 ) {
@@ -126,6 +126,11 @@ public data class FCUState(
                     0x02.toByte() -> WifiLedStatus.OFF
                     else -> null
                 },
+                schedulerStatus = when (bytes[16]) {
+                    0x01.toByte() -> SchedulerStatus.ENABLED
+                    0x02.toByte() -> SchedulerStatus.DISABLED
+                    else -> null
+                },
             )
         }
     }
@@ -219,7 +224,11 @@ public data class FCUState(
                 WifiLedStatus.OFF -> 0x02.toByte()
                 null -> 0xff.toByte()
             },
-            0xff.toByte(),
+            when (schedulerStatus) {
+                SchedulerStatus.ENABLED -> 0x01.toByte()
+                SchedulerStatus.DISABLED -> 0x02.toByte()
+                null -> 0xff.toByte()
+            },
             0xff.toByte(),
             0xff.toByte(),
         ).toHexString()

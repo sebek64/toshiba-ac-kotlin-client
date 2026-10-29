@@ -34,6 +34,7 @@ import toshibaac.client.types.MeritAMode
 import toshibaac.client.types.MeritBMode
 import toshibaac.client.types.PowerMode
 import toshibaac.client.types.PureIonMode
+import toshibaac.client.types.SchedulerStatus
 import toshibaac.client.types.SwingMode
 import toshibaac.client.types.TargetTemperature
 import toshibaac.client.types.Temperature
@@ -270,6 +271,12 @@ private class SetParametersCommand(
             "off" to WifiLedStatus.OFF,
         )
 
+    private val scheduler: SchedulerStatus? by option(help = "Target weekly scheduler status")
+        .choice(
+            "on" to SchedulerStatus.ENABLED,
+            "off" to SchedulerStatus.DISABLED,
+        )
+
     override fun run() {
         if (defrostNow && strongDefrost == null) {
             throw UsageError("--defrost-now requires --strong-defrost")
@@ -292,6 +299,7 @@ private class SetParametersCommand(
                 errorCode = null,
                 defrost = strongDefrost?.let { Defrost(strong = it, onDemand = defrostNow) },
                 wifiLedStatus = wifiLed,
+                schedulerStatus = scheduler,
             ),
         )
     }
