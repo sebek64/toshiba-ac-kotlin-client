@@ -32,9 +32,7 @@ public data class FCUState(
                 acStatus = when (bytes[0]) {
                     0x30.toByte() -> ACStatus.ON
                     0x31.toByte() -> ACStatus.OFF
-                    0x02.toByte() -> null // TODO: how to represent better?
-                    0xFF.toByte() -> null
-                    else -> throw IllegalArgumentException("Invalid ACStatus byte: ${bytes[0]}")
+                    else -> null
                 },
                 acMode = when (bytes[1]) {
                     0x41.toByte() -> ACMode.AUTO
@@ -42,9 +40,7 @@ public data class FCUState(
                     0x43.toByte() -> ACMode.HEAT
                     0x44.toByte() -> ACMode.DRY
                     0x45.toByte() -> ACMode.FAN
-                    0xFF.toByte() -> null
-                    0x00.toByte() -> null // TODO: how to represent better?
-                    else -> throw IllegalArgumentException("Invalid ACMode byte: ${bytes[1]}")
+                    else -> null
                 },
                 temperature = Temperature.fromRaw(bytes[2])?.let { TargetTemperature(it.fromHeating8CRaw(bytes[6])) },
                 fanMode = when (bytes[3]) {
@@ -55,9 +51,7 @@ public data class FCUState(
                     0x34.toByte() -> FanMode.MEDIUM
                     0x35.toByte() -> FanMode.MEDIUM_HIGH
                     0x36.toByte() -> FanMode.HIGH
-                    0x00.toByte() -> null // TODO: how to represent better?
-                    0xFF.toByte() -> null
-                    else -> throw IllegalArgumentException("Invalid FanMode byte: ${bytes[3]}")
+                    else -> null
                 },
                 swingMode = when (bytes[4]) {
                     0x31.toByte() -> SwingMode.OFF
@@ -69,26 +63,22 @@ public data class FCUState(
                     0x52.toByte() -> SwingMode.FIXED_3
                     0x53.toByte() -> SwingMode.FIXED_4
                     0x54.toByte() -> SwingMode.FIXED_5
-                    0x00.toByte() -> null // TODO: how to represent better?
-                    0xFF.toByte() -> null
-                    else -> throw IllegalArgumentException("Invalid SwingMode byte: ${bytes[4]}")
+                    else -> null
                 },
                 powerMode = when (bytes[5]) {
                     50.toByte() -> PowerMode.POWER_50
                     75.toByte() -> PowerMode.POWER_75
                     100.toByte() -> PowerMode.POWER_100
-                    0xFF.toByte() -> null
-                    else -> throw IllegalArgumentException("Invalid PowerMode byte: ${bytes[5]}")
+                    else -> null
                 },
-                meritBMode = when (val halfByte = (bytes[6].toUInt() shr 4).toByte()) {
+                meritBMode = when ((bytes[6].toUInt() shr 4).toByte()) {
                     0x02.toByte() -> MeritBMode.FIREPLACE_1
                     0x03.toByte() -> MeritBMode.FIREPLACE_2
                     0x01.toByte() -> MeritBMode.OFF
                     0x00.toByte() -> MeritBMode.OFF
-                    (-1).toByte() -> null
-                    else -> throw IllegalArgumentException("Invalid MeritBMode half-byte: $halfByte")
+                    else -> null
                 },
-                meritAMode = when (val halfByte = bytes[6].toUInt() and 0x0Fu) {
+                meritAMode = when (bytes[6].toUInt() and 0x0Fu) {
                     0x01u -> MeritAMode.HIGH_POWER
                     0x02u -> MeritAMode.CDU_SILENT_1
                     0x03u -> MeritAMode.ECO
@@ -98,14 +88,12 @@ public data class FCUState(
                     0x07u -> MeritAMode.COMFORT
                     0x0Au -> MeritAMode.CDU_SILENT_2
                     0x00u -> MeritAMode.OFF
-                    0x0Fu -> null
-                    else -> throw IllegalArgumentException("Invalid MeritAMode half-byte: $halfByte")
+                    else -> null
                 },
                 pureIonMode = when (bytes[7]) {
                     0x10.toByte() -> PureIonMode.OFF
                     0x18.toByte() -> PureIonMode.ON
-                    0xFF.toByte() -> null
-                    else -> throw IllegalArgumentException("Invalid PureIonMode byte: ${bytes[7]}")
+                    else -> null
                 },
                 indoorTemperature = Temperature.fromRaw(bytes[8])?.let { IndoorTemperature(it) },
                 outdoorTemperature = Temperature.fromRaw(bytes[9])?.let { OutdoorTemperature(it) },

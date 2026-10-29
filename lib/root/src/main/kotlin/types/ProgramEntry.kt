@@ -18,12 +18,12 @@ public data class ProgramEntry(
             }
             val bytes = str.hexToByteArray()
             return ProgramEntry(
-                hours = Hours(bytes[0].toHexString().toInt(10)),
-                minutes = Minutes(bytes[1].toHexString().toInt(10)),
+                hours = Hours(bytes[0].toHexString().toIntOrNull(10) ?: return null),
+                minutes = Minutes(bytes[1].toHexString().toIntOrNull(10) ?: return null),
                 acStatus = when (bytes[2]) {
                     0x30.toByte() -> ACStatus.ON
                     0x31.toByte() -> ACStatus.OFF
-                    else -> throw IllegalArgumentException("Invalid ACStatus byte: ${bytes[0]}")
+                    else -> return null
                 },
                 acMode = when (bytes[3]) {
                     0x41.toByte() -> ACMode.AUTO
@@ -31,9 +31,7 @@ public data class ProgramEntry(
                     0x43.toByte() -> ACMode.HEAT
                     0x44.toByte() -> ACMode.DRY
                     0x45.toByte() -> ACMode.FAN
-                    0xFF.toByte() -> null
-                    0x00.toByte() -> null // TODO: how to represent better?
-                    else -> throw IllegalArgumentException("Invalid ACMode byte: ${bytes[1]}")
+                    else -> null
                 },
                 temperature = Temperature.fromRaw(bytes[4])?.let { TargetTemperature(it.fromHeating8CRaw(bytes[6])) },
                 fanMode = when (bytes[5]) {
@@ -44,19 +42,16 @@ public data class ProgramEntry(
                     0x34.toByte() -> FanMode.MEDIUM
                     0x35.toByte() -> FanMode.MEDIUM_HIGH
                     0x36.toByte() -> FanMode.HIGH
-                    0x00.toByte() -> null // TODO: how to represent better?
-                    0xFF.toByte() -> null
-                    else -> throw IllegalArgumentException("Invalid FanMode byte: ${bytes[3]}")
+                    else -> null
                 },
-                meritBMode = when (val halfByte = (bytes[6].toUInt() shr 4).toByte()) {
+                meritBMode = when ((bytes[6].toUInt() shr 4).toByte()) {
                     0x02.toByte() -> MeritBMode.FIREPLACE_1
                     0x03.toByte() -> MeritBMode.FIREPLACE_2
                     0x01.toByte() -> MeritBMode.OFF
                     0x00.toByte() -> MeritBMode.OFF
-                    (-1).toByte() -> null
-                    else -> throw IllegalArgumentException("Invalid MeritBMode half-byte: $halfByte")
+                    else -> null
                 },
-                meritAMode = when (val halfByte = bytes[6].toUInt() and 0x0Fu) {
+                meritAMode = when (bytes[6].toUInt() and 0x0Fu) {
                     0x01u -> MeritAMode.HIGH_POWER
                     0x02u -> MeritAMode.CDU_SILENT_1
                     0x03u -> MeritAMode.ECO
@@ -66,8 +61,7 @@ public data class ProgramEntry(
                     0x07u -> MeritAMode.COMFORT
                     0x0Au -> MeritAMode.CDU_SILENT_2
                     0x00u -> MeritAMode.OFF
-                    0x0Fu -> null
-                    else -> throw IllegalArgumentException("Invalid MeritAMode half-byte: $halfByte")
+                    else -> null
                 },
                 swingMode = when (bytes[7]) {
                     0x31.toByte() -> SwingMode.OFF
@@ -79,9 +73,7 @@ public data class ProgramEntry(
                     0x52.toByte() -> SwingMode.FIXED_3
                     0x53.toByte() -> SwingMode.FIXED_4
                     0x54.toByte() -> SwingMode.FIXED_5
-                    0x00.toByte() -> null // TODO: how to represent better?
-                    0xFF.toByte() -> null
-                    else -> throw IllegalArgumentException("Invalid SwingMode byte: ${bytes[4]}")
+                    else -> null
                 },
             )
         }
