@@ -10,4 +10,12 @@ public enum class SwingMode {
     FIXED_3,
     FIXED_4,
     FIXED_5,
+
+    /** HADA Care: louvers fixed so the air does not blow directly at people. */
+    HADA,
+    FIXED_HORIZONTAL_1,
+    FIXED_HORIZONTAL_2,
+    FIXED_HORIZONTAL_3,
+    FIXED_HORIZONTAL_4,
+    FIXED_HORIZONTAL_5,
 }

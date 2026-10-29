@@ -73,6 +73,12 @@ public data class ProgramEntry(
                     0x52.toByte() -> SwingMode.FIXED_3
                     0x53.toByte() -> SwingMode.FIXED_4
                     0x54.toByte() -> SwingMode.FIXED_5
+                    0x60.toByte() -> SwingMode.HADA
+                    0x61.toByte() -> SwingMode.FIXED_HORIZONTAL_1
+                    0x62.toByte() -> SwingMode.FIXED_HORIZONTAL_2
+                    0x63.toByte() -> SwingMode.FIXED_HORIZONTAL_3
+                    0x64.toByte() -> SwingMode.FIXED_HORIZONTAL_4
+                    0x65.toByte() -> SwingMode.FIXED_HORIZONTAL_5
                     else -> null
                 },
             )
@@ -135,6 +141,12 @@ public data class ProgramEntry(
                 SwingMode.FIXED_3 -> 0x52.toByte()
                 SwingMode.FIXED_4 -> 0x53.toByte()
                 SwingMode.FIXED_5 -> 0x54.toByte()
+                SwingMode.HADA -> 0x60.toByte()
+                SwingMode.FIXED_HORIZONTAL_1 -> 0x61.toByte()
+                SwingMode.FIXED_HORIZONTAL_2 -> 0x62.toByte()
+                SwingMode.FIXED_HORIZONTAL_3 -> 0x63.toByte()
+                SwingMode.FIXED_HORIZONTAL_4 -> 0x64.toByte()
+                SwingMode.FIXED_HORIZONTAL_5 -> 0x65.toByte()
                 null -> 0xff.toByte()
             },
         ).toHexString()

@@ -214,6 +214,12 @@ private class SetParametersCommand(
             "fixed_3" to SwingMode.FIXED_3,
             "fixed_4" to SwingMode.FIXED_4,
             "fixed_5" to SwingMode.FIXED_5,
+            "hada" to SwingMode.HADA,
+            "fixed_horizontal_1" to SwingMode.FIXED_HORIZONTAL_1,
+            "fixed_horizontal_2" to SwingMode.FIXED_HORIZONTAL_2,
+            "fixed_horizontal_3" to SwingMode.FIXED_HORIZONTAL_3,
+            "fixed_horizontal_4" to SwingMode.FIXED_HORIZONTAL_4,
+            "fixed_horizontal_5" to SwingMode.FIXED_HORIZONTAL_5,
         )
 
     private val powerMode: PowerMode? by option(help = "Target power mode")
