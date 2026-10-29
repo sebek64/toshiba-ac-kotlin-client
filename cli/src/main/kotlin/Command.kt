@@ -23,6 +23,7 @@ import toshibaac.client.types.PowerMode
 import toshibaac.client.types.PureIonMode
 import toshibaac.client.types.SelfCleaningMode
 import toshibaac.client.types.SwingMode
+import toshibaac.client.types.WifiLedStatus
 import kotlin.time.Duration
 
 private val log = KotlinLogging.logger {}
@@ -234,6 +235,11 @@ private fun FCUState.prettyPrint(printDefaults: Boolean) {
     defrost?.let { value ->
         if (printDefaults || value.strong || value.onDemand) {
             println("    Strong Defrost: ${value.strong}, On-demand Defrost: ${value.onDemand}")
+        }
+    }
+    wifiLedStatus?.let { value ->
+        if (printDefaults || value != WifiLedStatus.ON) {
+            println("    Wi-Fi LED: $value")
         }
     }
 }

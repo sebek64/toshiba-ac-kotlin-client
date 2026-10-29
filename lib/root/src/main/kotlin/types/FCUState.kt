@@ -21,7 +21,8 @@ public data class FCUState(
     /** Reported by the AC only, never sent. */
     val selfCleaningMode: SelfCleaningMode?,
     val defrost: Defrost?,
-    // unknown field
+    /** LED on the Wi-Fi adapter. */
+    val wifiLedStatus: WifiLedStatus?,
     // schedule status 00 - disabled, 01 - enabled
     // off-timer hours
     // off-timer minutes
@@ -120,6 +121,11 @@ public data class FCUState(
                         onDemand = (bytes[14].toInt() and 0x02) != 0,
                     )
                 },
+                wifiLedStatus = when (bytes[15]) {
+                    0x01.toByte() -> WifiLedStatus.ON
+                    0x02.toByte() -> WifiLedStatus.OFF
+                    else -> null
+                },
             )
         }
     }
@@ -208,7 +214,11 @@ public data class FCUState(
                 null -> 0xff.toByte()
                 else -> ((if (defrost.strong) 0x01 else 0x00) or (if (defrost.onDemand) 0x02 else 0x00)).toByte()
             },
-            0xff.toByte(),
+            when (wifiLedStatus) {
+                WifiLedStatus.ON -> 0x01.toByte()
+                WifiLedStatus.OFF -> 0x02.toByte()
+                null -> 0xff.toByte()
+            },
             0xff.toByte(),
             0xff.toByte(),
             0xff.toByte(),

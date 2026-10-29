@@ -37,6 +37,7 @@ import toshibaac.client.types.PureIonMode
 import toshibaac.client.types.SwingMode
 import toshibaac.client.types.TargetTemperature
 import toshibaac.client.types.Temperature
+import toshibaac.client.types.WifiLedStatus
 import kotlin.concurrent.thread
 import kotlin.time.Duration
 
@@ -263,6 +264,12 @@ private class SetParametersCommand(
 
     private val defrostNow: Boolean by option(help = "Request on-demand defrost; requires --strong-defrost").flag()
 
+    private val wifiLed: WifiLedStatus? by option(help = "Target Wi-Fi adapter LED status")
+        .choice(
+            "on" to WifiLedStatus.ON,
+            "off" to WifiLedStatus.OFF,
+        )
+
     override fun run() {
         if (defrostNow && strongDefrost == null) {
             throw UsageError("--defrost-now requires --strong-defrost")
@@ -284,6 +291,7 @@ private class SetParametersCommand(
                 selfCleaningMode = null,
                 errorCode = null,
                 defrost = strongDefrost?.let { Defrost(strong = it, onDemand = defrostNow) },
+                wifiLedStatus = wifiLed,
             ),
         )
     }
