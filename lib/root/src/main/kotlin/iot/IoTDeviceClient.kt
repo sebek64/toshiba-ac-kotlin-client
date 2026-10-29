@@ -5,6 +5,7 @@ import com.microsoft.azure.sdk.iot.device.IotHubClientProtocol
 import com.microsoft.azure.sdk.iot.device.IotHubConnectionStatusChangeReason
 import com.microsoft.azure.sdk.iot.device.Message
 import com.microsoft.azure.sdk.iot.device.transport.IotHubConnectionStatus
+import com.microsoft.azure.sdk.iot.device.transport.NoRetry
 import com.microsoft.azure.sdk.iot.device.twin.DirectMethodResponse
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CompletableDeferred
@@ -40,6 +41,7 @@ public class IoTDeviceClient private constructor(
                 },
                 IotHubClientProtocol.AMQPS,
             )
+            client.setRetryPolicy(NoRetry())
             client.setConnectionStatusChangeCallback(
                 { context ->
                     log.info { "IoT connection status ${context.newStatus} (${context.newStatusReason})" }
