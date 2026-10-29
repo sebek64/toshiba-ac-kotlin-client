@@ -27,6 +27,7 @@ import toshibaac.client.http.Password
 import toshibaac.client.http.Username
 import toshibaac.client.types.ACMode
 import toshibaac.client.types.ACStatus
+import toshibaac.client.types.AirDirection
 import toshibaac.client.types.Defrost
 import toshibaac.client.types.FCUState
 import toshibaac.client.types.FanMode
@@ -287,6 +288,22 @@ private class SetParametersCommand(
             "off" to SmartSensingStatus.OFF,
         )
 
+    private val airDirection: AirDirection? by option(
+        help = "Target smart sensing air direction: none, indirect, direct or a touch control area A0..E2",
+    )
+        .choice(
+            buildMap {
+                put("none", AirDirection.None)
+                put("indirect", AirDirection.Indirect)
+                put("direct", AirDirection.Direct)
+                for (row in 0..4) {
+                    for (column in 0..2) {
+                        put("${'A' + row}$column", AirDirection.Area(row, column))
+                    }
+                }
+            },
+        )
+
     private val timer: Timer? by mutuallyExclusiveOptions(
         option("--off-timer", help = "Turn the AC off after the given delay (e.g., 30m, 2h, 1h 30m)")
             .convert { scheduledTimer(Duration.parse(it), Timer.Scheduled::Off) },
@@ -328,6 +345,7 @@ private class SetParametersCommand(
                 wifiLedStatus = wifiLed,
                 schedulerStatus = scheduler,
                 smartSensingStatus = smartSensing,
+                airDirection = airDirection,
             ),
         )
     }

@@ -29,6 +29,8 @@ public data class FCUState(
     val wifiLedStatus: WifiLedStatus?,
     val schedulerStatus: SchedulerStatus?,
     val smartSensingStatus: SmartSensingStatus?,
+    /** The app resets it to [AirDirection.None] whenever [swingMode] is set to anything but off. */
+    val airDirection: AirDirection?,
 ) {
     internal companion object {
         fun from(str: String): FCUState {
@@ -158,6 +160,13 @@ public data class FCUState(
                     0x11.toByte() -> SmartSensingStatus.OFF
                     else -> null
                 },
+                airDirection = when (val code = (bytes.getOrNull(20) ?: 0xFF.toByte()).toInt() and 0xFF) {
+                    0x20 -> AirDirection.None
+                    0x30 -> AirDirection.Indirect
+                    0x31 -> AirDirection.Direct
+                    in 0x21..0x2F -> AirDirection.Area(row = (code - 0x21) / 3, column = (code - 0x21) % 3)
+                    else -> null
+                },
             )
         }
     }
@@ -284,7 +293,13 @@ public data class FCUState(
                 SmartSensingStatus.OFF -> 0x11.toByte()
                 null -> 0xff.toByte()
             },
-            0xff.toByte(),
+            when (airDirection) {
+                AirDirection.None -> 0x20.toByte()
+                AirDirection.Indirect -> 0x30.toByte()
+                AirDirection.Direct -> 0x31.toByte()
+                is AirDirection.Area -> (0x21 + airDirection.row * 3 + airDirection.column).toByte()
+                null -> 0xff.toByte()
+            },
             0xff.toByte(),
             0xff.toByte(),
             0xff.toByte(),

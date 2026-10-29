@@ -15,6 +15,7 @@ import toshibaac.client.iot.IoTDeviceClient
 import toshibaac.client.iot.MessageId
 import toshibaac.client.iot.OutgoingEvent
 import toshibaac.client.types.ACErrorCode
+import toshibaac.client.types.AirDirection
 import toshibaac.client.types.FCUState
 import toshibaac.client.types.FanMode
 import toshibaac.client.types.MeritAMode
@@ -253,6 +254,13 @@ private fun FCUState.prettyPrint(printDefaults: Boolean) {
     smartSensingStatus?.let { value ->
         if (printDefaults || value != SmartSensingStatus.OFF) {
             println("    Smart Sensing: $value")
+        }
+    }
+    airDirection?.let { value ->
+        when (value) {
+            AirDirection.None -> if (printDefaults) println("    Air Direction: None")
+            AirDirection.Indirect, AirDirection.Direct -> println("    Air Direction: $value")
+            is AirDirection.Area -> println("    Air Direction: Area ${'A' + value.row}${value.column}")
         }
     }
     timer?.let { value ->
