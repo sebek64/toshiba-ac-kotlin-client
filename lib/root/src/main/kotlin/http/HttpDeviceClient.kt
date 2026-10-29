@@ -206,8 +206,11 @@ internal class HttpDeviceClient internal constructor(
             httpClient.send(request, HttpResponse.BodyHandlers.ofString())
         }
 
-        check(response.statusCode() == 200) {
-            "Login failed with status code ${response.statusCode()}: ${response.body()}"
+        if (response.statusCode() != 200) {
+            throw HttpStatusException(
+                statusCode = response.statusCode(),
+                body = response.body(),
+            )
         }
 
         val bodyStr = response.body()
