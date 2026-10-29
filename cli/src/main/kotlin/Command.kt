@@ -2,7 +2,7 @@ package toshibaac.cli
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.onSubscription
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.withTimeout
 import toshibaac.client.DeviceClient
@@ -41,7 +41,7 @@ internal sealed interface Command {
             if (listenForUpdatesFor.isPositive()) {
                 withTimeout(listenForUpdatesFor) {
                     iotClientWrapper.get().incomingEvents
-                        .onSubscription {
+                        .onStart {
                             deviceClient.get().getACList().prettyPrint()
                         }
                         .collect { incomingEvent ->
@@ -140,7 +140,7 @@ internal sealed interface Command {
             val iotClient = iotClientWrapper.get()
             val messageId = MessageId.random()
             iotClient.incomingEvents
-                .onSubscription {
+                .onStart {
                     iotClient.iotClient.sendEvent(
                         OutgoingEvent.SetFCUParameters(
                             targetId = uidToName.keys.toList(),
