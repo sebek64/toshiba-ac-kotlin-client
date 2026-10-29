@@ -87,8 +87,8 @@ public data class ProgramEntry(
 
     public val asHexString: String
         get() = byteArrayOf(
-            hours.value.toByte(),
-            minutes.value.toByte(),
+            hours.value.toString().padStart(2, '0').hexToByte(),
+            minutes.value.toString().padStart(2, '0').hexToByte(),
             when (acStatus) {
                 ACStatus.ON -> 0x30.toByte()
                 ACStatus.OFF -> 0x31.toByte()
