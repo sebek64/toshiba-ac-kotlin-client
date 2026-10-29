@@ -32,6 +32,8 @@ public data class FCUState(
     /** The app resets it to [AirDirection.None] whenever [swingMode] is set to anything but off. */
     val airDirection: AirDirection?,
     val motionTrackingStatus: MotionTrackingStatus?,
+    /** Raw high byte of the error code on light commercial and VRF models. Reported by the AC only, never sent. */
+    val errorCodeHigh: Int?,
 ) {
     internal companion object {
         fun from(str: String): FCUState {
@@ -172,6 +174,10 @@ public data class FCUState(
                     0x40.toByte() -> MotionTrackingStatus.ON
                     0x41.toByte() -> MotionTrackingStatus.OFF
                     else -> null
+                },
+                errorCodeHigh = when (val code = bytes.getOrNull(22)?.toInt()?.and(0xFF)) {
+                    0xFF -> null
+                    else -> code
                 },
             )
         }

@@ -347,6 +347,7 @@ private class SetParametersCommand(
                 outdoorTemperature = null,
                 selfCleaningMode = null,
                 errorCode = null,
+                errorCodeHigh = null,
                 timer = timer,
                 defrost = strongDefrost?.let { Defrost(strong = it, onDemand = defrostNow) },
                 wifiLedStatus = wifiLed,

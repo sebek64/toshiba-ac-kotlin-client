@@ -269,6 +269,11 @@ private fun FCUState.prettyPrint(printDefaults: Boolean) {
             println("    Motion Tracking: $value")
         }
     }
+    errorCodeHigh?.let { value ->
+        if (printDefaults || value != 0) {
+            println("    Error Code High Byte: ${value.toString(16).uppercase().padStart(2, '0')}")
+        }
+    }
     timer?.let { value ->
         when (value) {
             Timer.None -> if (printDefaults) println("    Timer: NONE")
