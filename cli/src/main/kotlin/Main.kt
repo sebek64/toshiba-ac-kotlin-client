@@ -33,6 +33,7 @@ import toshibaac.client.types.FCUState
 import toshibaac.client.types.FanMode
 import toshibaac.client.types.MeritAMode
 import toshibaac.client.types.MeritBMode
+import toshibaac.client.types.MotionTrackingStatus
 import toshibaac.client.types.PowerMode
 import toshibaac.client.types.PureIonMode
 import toshibaac.client.types.SchedulerStatus
@@ -304,6 +305,12 @@ private class SetParametersCommand(
             },
         )
 
+    private val motionTracking: MotionTrackingStatus? by option(help = "Target smart sensing motion tracking status")
+        .choice(
+            "on" to MotionTrackingStatus.ON,
+            "off" to MotionTrackingStatus.OFF,
+        )
+
     private val timer: Timer? by mutuallyExclusiveOptions(
         option("--off-timer", help = "Turn the AC off after the given delay (e.g., 30m, 2h, 1h 30m)")
             .convert { scheduledTimer(Duration.parse(it), Timer.Scheduled::Off) },
@@ -346,6 +353,7 @@ private class SetParametersCommand(
                 schedulerStatus = scheduler,
                 smartSensingStatus = smartSensing,
                 airDirection = airDirection,
+                motionTrackingStatus = motionTracking,
             ),
         )
     }

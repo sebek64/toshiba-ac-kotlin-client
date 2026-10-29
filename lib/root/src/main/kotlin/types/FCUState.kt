@@ -31,6 +31,7 @@ public data class FCUState(
     val smartSensingStatus: SmartSensingStatus?,
     /** The app resets it to [AirDirection.None] whenever [swingMode] is set to anything but off. */
     val airDirection: AirDirection?,
+    val motionTrackingStatus: MotionTrackingStatus?,
 ) {
     internal companion object {
         fun from(str: String): FCUState {
@@ -167,6 +168,11 @@ public data class FCUState(
                     in 0x21..0x2F -> AirDirection.Area(row = (code - 0x21) / 3, column = (code - 0x21) % 3)
                     else -> null
                 },
+                motionTrackingStatus = when (bytes.getOrNull(21)) {
+                    0x40.toByte() -> MotionTrackingStatus.ON
+                    0x41.toByte() -> MotionTrackingStatus.OFF
+                    else -> null
+                },
             )
         }
     }
@@ -300,7 +306,11 @@ public data class FCUState(
                 is AirDirection.Area -> (0x21 + airDirection.row * 3 + airDirection.column).toByte()
                 null -> 0xff.toByte()
             },
-            0xff.toByte(),
+            when (motionTrackingStatus) {
+                MotionTrackingStatus.ON -> 0x40.toByte()
+                MotionTrackingStatus.OFF -> 0x41.toByte()
+                null -> 0xff.toByte()
+            },
             0xff.toByte(),
             0xff.toByte(),
             0xff.toByte(),

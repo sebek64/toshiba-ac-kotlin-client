@@ -20,6 +20,7 @@ import toshibaac.client.types.FCUState
 import toshibaac.client.types.FanMode
 import toshibaac.client.types.MeritAMode
 import toshibaac.client.types.MeritBMode
+import toshibaac.client.types.MotionTrackingStatus
 import toshibaac.client.types.PowerMode
 import toshibaac.client.types.PureIonMode
 import toshibaac.client.types.SchedulerStatus
@@ -261,6 +262,11 @@ private fun FCUState.prettyPrint(printDefaults: Boolean) {
             AirDirection.None -> if (printDefaults) println("    Air Direction: None")
             AirDirection.Indirect, AirDirection.Direct -> println("    Air Direction: $value")
             is AirDirection.Area -> println("    Air Direction: Area ${'A' + value.row}${value.column}")
+        }
+    }
+    motionTrackingStatus?.let { value ->
+        if (printDefaults || value != MotionTrackingStatus.OFF) {
+            println("    Motion Tracking: $value")
         }
     }
     timer?.let { value ->
