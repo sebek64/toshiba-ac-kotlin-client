@@ -38,7 +38,10 @@ import toshibaac.client.types.SchedulerStatus
 import toshibaac.client.types.SwingMode
 import toshibaac.client.types.TargetTemperature
 import toshibaac.client.types.Temperature
+import toshibaac.client.types.Timer
 import toshibaac.client.types.WifiLedStatus
+import java.time.LocalTime
+import java.time.ZoneOffset
 import kotlin.concurrent.thread
 import kotlin.time.Duration
 
@@ -277,6 +280,22 @@ private class SetParametersCommand(
             "off" to SchedulerStatus.DISABLED,
         )
 
+    private val timer: Timer? by mutuallyExclusiveOptions(
+        option("--off-timer", help = "Turn the AC off after the given delay (e.g., 30m, 2h, 1h 30m)")
+            .convert { scheduledTimer(Duration.parse(it), Timer.Scheduled::Off) },
+        option("--on-timer", help = "Turn the AC on after the given delay (e.g., 30m, 2h, 1h 30m)")
+            .convert { scheduledTimer(Duration.parse(it), Timer.Scheduled::On) },
+        option("--clear-timer", help = "Clear the timer")
+            .flag()
+            .convert { value ->
+                when (value) {
+                    true -> Timer.None
+                    false -> null
+                }
+            },
+    )
+        .single()
+
     override fun run() {
         if (defrostNow && strongDefrost == null) {
             throw UsageError("--defrost-now requires --strong-defrost")
@@ -297,6 +316,7 @@ private class SetParametersCommand(
                 outdoorTemperature = null,
                 selfCleaningMode = null,
                 errorCode = null,
+                timer = timer,
                 defrost = strongDefrost?.let { Defrost(strong = it, onDemand = defrostNow) },
                 wifiLedStatus = wifiLed,
                 schedulerStatus = scheduler,
@@ -304,3 +324,5 @@ private class SetParametersCommand(
         )
     }
 }
+
+private fun scheduledTimer(delay: Duration, create: (Duration, LocalTime) -> Timer): Timer = create(delay, LocalTime.now(ZoneOffset.UTC))

@@ -1,5 +1,10 @@
 package toshibaac.client.types
 
+import java.time.LocalTime
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
+
 public data class FCUState(
     val acStatus: ACStatus?,
     val acMode: ACMode?,
@@ -15,21 +20,30 @@ public data class FCUState(
     val outdoorTemperature: OutdoorTemperature?,
     /** Reported by the AC only, never sent. */
     val errorCode: ACErrorCode?,
-    // 3x some timer fields
-    //   010100 for timer setting
-    //   0a0000 for timer clear
+    /** When sending [Timer.None], set [acStatus] as well, the clear command differs for an AC that is off. */
+    val timer: Timer?,
     /** Reported by the AC only, never sent. */
     val selfCleaningMode: SelfCleaningMode?,
     val defrost: Defrost?,
     /** LED on the Wi-Fi adapter. */
     val wifiLedStatus: WifiLedStatus?,
     val schedulerStatus: SchedulerStatus?,
-    // off-timer hours
-    // off-timer minutes
 ) {
     internal companion object {
         fun from(str: String): FCUState {
             val bytes = str.hexToByteArray()
+
+            fun scheduledTimer(create: (Duration, LocalTime) -> Timer): Timer? {
+                val delayHours = bytes[12].toInt() and 0xFF
+                val delayMinutes = bytes[13].toInt() and 0xFF
+                val setAtHour = bytes[17].toInt() and 0xFF
+                val setAtMinute = bytes[18].toInt() and 0xFF
+                return when {
+                    delayHours == 0xFF || delayMinutes == 0xFF || setAtHour > 23 || setAtMinute > 59 -> null
+                    else -> create(delayHours.hours + delayMinutes.minutes, LocalTime.of(setAtHour, setAtMinute))
+                }
+            }
+
             return FCUState(
                 acStatus = when (bytes[0]) {
                     0x30.toByte() -> ACStatus.ON
@@ -108,6 +122,13 @@ public data class FCUState(
                 errorCode = when (val code = bytes[10].toInt() and 0xFF) {
                     0xFF, 0xFE, 0x00 -> null
                     else -> acErrorCodeOf(code)
+                },
+                timer = when (bytes[11].toInt() and 0xFF) {
+                    0x01 -> scheduledTimer(Timer.Scheduled::Off)
+                    0x03 -> scheduledTimer(Timer.Scheduled::On)
+                    0x05 -> scheduledTimer(Timer.Scheduled::OnOff)
+                    0x02, 0x04, 0x06, 0x09, 0x0A, 0x0B -> Timer.None
+                    else -> null
                 },
                 selfCleaningMode = when {
                     bytes[14] == 0xFF.toByte() -> null
@@ -212,9 +233,22 @@ public data class FCUState(
             indoorTemperature?.value.asByte,
             outdoorTemperature?.value.asByte,
             0xff.toByte(),
-            0xff.toByte(),
-            0xff.toByte(),
-            0xff.toByte(),
+            when (timer) {
+                null, is Timer.Scheduled.OnOff -> 0xff.toByte()
+                Timer.None -> if (acStatus == ACStatus.OFF) 0x09.toByte() else 0x0a.toByte()
+                is Timer.Scheduled.Off -> 0x01.toByte()
+                is Timer.Scheduled.On -> 0x03.toByte()
+            },
+            when (timer) {
+                null, is Timer.Scheduled.OnOff -> 0xff.toByte()
+                Timer.None -> 0x00.toByte()
+                is Timer.Scheduled -> timer.delay.inWholeHours.toByte()
+            },
+            when (timer) {
+                null, is Timer.Scheduled.OnOff -> 0xff.toByte()
+                Timer.None -> 0x00.toByte()
+                is Timer.Scheduled -> (timer.delay.inWholeMinutes % 60).toByte()
+            },
             when (defrost) {
                 null -> 0xff.toByte()
                 else -> ((if (defrost.strong) 0x01 else 0x00) or (if (defrost.onDemand) 0x02 else 0x00)).toByte()
@@ -229,7 +263,15 @@ public data class FCUState(
                 SchedulerStatus.DISABLED -> 0x02.toByte()
                 null -> 0xff.toByte()
             },
-            0xff.toByte(),
-            0xff.toByte(),
+            when (timer) {
+                null, is Timer.Scheduled.OnOff -> 0xff.toByte()
+                Timer.None -> 0x00.toByte()
+                is Timer.Scheduled -> timer.setAt.hour.toByte()
+            },
+            when (timer) {
+                null, is Timer.Scheduled.OnOff -> 0xff.toByte()
+                Timer.None -> 0x00.toByte()
+                is Timer.Scheduled -> timer.setAt.minute.toByte()
+            },
         ).toHexString()
 }

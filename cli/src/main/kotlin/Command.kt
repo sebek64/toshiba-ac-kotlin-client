@@ -24,6 +24,7 @@ import toshibaac.client.types.PureIonMode
 import toshibaac.client.types.SchedulerStatus
 import toshibaac.client.types.SelfCleaningMode
 import toshibaac.client.types.SwingMode
+import toshibaac.client.types.Timer
 import toshibaac.client.types.WifiLedStatus
 import kotlin.time.Duration
 
@@ -246,6 +247,14 @@ private fun FCUState.prettyPrint(printDefaults: Boolean) {
     schedulerStatus?.let { value ->
         if (printDefaults || value != SchedulerStatus.DISABLED) {
             println("    Scheduler: $value")
+        }
+    }
+    timer?.let { value ->
+        when (value) {
+            Timer.None -> if (printDefaults) println("    Timer: NONE")
+            is Timer.Scheduled.Off -> println("    Off Timer: ${value.delay} after ${value.setAt} UTC")
+            is Timer.Scheduled.On -> println("    On Timer: ${value.delay} after ${value.setAt} UTC")
+            is Timer.Scheduled.OnOff -> println("    On/Off Timer: ${value.delay} after ${value.setAt} UTC")
         }
     }
 }
