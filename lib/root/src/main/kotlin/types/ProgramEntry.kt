@@ -13,7 +13,7 @@ public data class ProgramEntry(
 ) {
     internal companion object {
         fun from(str: String): ProgramEntry? {
-            if (str.isEmpty() || str == "invalid") { // TODO: better representation of invalid?
+            if (str.length != 16 && str.length != 20) {
                 return null
             }
             val bytes = str.hexToByteArray()
