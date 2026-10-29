@@ -49,8 +49,8 @@ public data class ProgramEntry(
                     else -> throw IllegalArgumentException("Invalid FanMode byte: ${bytes[3]}")
                 },
                 meritBMode = when (val halfByte = (bytes[6].toUInt() shr 4).toByte()) {
-                    0x03.toByte() -> MeritBMode.FIREPLACE_1
-                    0x02.toByte() -> MeritBMode.FIREPLACE_2
+                    0x02.toByte() -> MeritBMode.FIREPLACE_1
+                    0x03.toByte() -> MeritBMode.FIREPLACE_2
                     0x01.toByte() -> MeritBMode.OFF
                     0x00.toByte() -> MeritBMode.OFF
                     (-1).toByte() -> null
@@ -116,8 +116,8 @@ public data class ProgramEntry(
             },
             (
                 when (meritBMode) {
-                    MeritBMode.FIREPLACE_1 -> 0x30
-                    MeritBMode.FIREPLACE_2 -> 0x20
+                    MeritBMode.FIREPLACE_1 -> 0x20
+                    MeritBMode.FIREPLACE_2 -> 0x30
                     MeritBMode.OFF -> 0x00
                     null -> 0xf0
                 } or when (meritAMode) {
