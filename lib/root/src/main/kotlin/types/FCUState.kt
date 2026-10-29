@@ -28,6 +28,7 @@ public data class FCUState(
     /** LED on the Wi-Fi adapter. */
     val wifiLedStatus: WifiLedStatus?,
     val schedulerStatus: SchedulerStatus?,
+    val smartSensingStatus: SmartSensingStatus?,
 ) {
     internal companion object {
         fun from(str: String): FCUState {
@@ -152,6 +153,11 @@ public data class FCUState(
                     0x02.toByte() -> SchedulerStatus.DISABLED
                     else -> null
                 },
+                smartSensingStatus = when (bytes.getOrNull(19)) {
+                    0x10.toByte() -> SmartSensingStatus.ON
+                    0x11.toByte() -> SmartSensingStatus.OFF
+                    else -> null
+                },
             )
         }
     }
@@ -273,5 +279,18 @@ public data class FCUState(
                 Timer.None -> 0x00.toByte()
                 is Timer.Scheduled -> timer.setAt.minute.toByte()
             },
+            when (smartSensingStatus) {
+                SmartSensingStatus.ON -> 0x10.toByte()
+                SmartSensingStatus.OFF -> 0x11.toByte()
+                null -> 0xff.toByte()
+            },
+            0xff.toByte(),
+            0xff.toByte(),
+            0xff.toByte(),
+            0xff.toByte(),
+            0xff.toByte(),
+            0xff.toByte(),
+            0xff.toByte(),
+            0xff.toByte(),
         ).toHexString()
 }

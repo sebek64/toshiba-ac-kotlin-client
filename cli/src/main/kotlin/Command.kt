@@ -23,6 +23,7 @@ import toshibaac.client.types.PowerMode
 import toshibaac.client.types.PureIonMode
 import toshibaac.client.types.SchedulerStatus
 import toshibaac.client.types.SelfCleaningMode
+import toshibaac.client.types.SmartSensingStatus
 import toshibaac.client.types.SwingMode
 import toshibaac.client.types.Timer
 import toshibaac.client.types.WifiLedStatus
@@ -247,6 +248,11 @@ private fun FCUState.prettyPrint(printDefaults: Boolean) {
     schedulerStatus?.let { value ->
         if (printDefaults || value != SchedulerStatus.DISABLED) {
             println("    Scheduler: $value")
+        }
+    }
+    smartSensingStatus?.let { value ->
+        if (printDefaults || value != SmartSensingStatus.OFF) {
+            println("    Smart Sensing: $value")
         }
     }
     timer?.let { value ->

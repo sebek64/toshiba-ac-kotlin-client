@@ -35,6 +35,7 @@ import toshibaac.client.types.MeritBMode
 import toshibaac.client.types.PowerMode
 import toshibaac.client.types.PureIonMode
 import toshibaac.client.types.SchedulerStatus
+import toshibaac.client.types.SmartSensingStatus
 import toshibaac.client.types.SwingMode
 import toshibaac.client.types.TargetTemperature
 import toshibaac.client.types.Temperature
@@ -280,6 +281,12 @@ private class SetParametersCommand(
             "off" to SchedulerStatus.DISABLED,
         )
 
+    private val smartSensing: SmartSensingStatus? by option(help = "Target smart sensing status")
+        .choice(
+            "on" to SmartSensingStatus.ON,
+            "off" to SmartSensingStatus.OFF,
+        )
+
     private val timer: Timer? by mutuallyExclusiveOptions(
         option("--off-timer", help = "Turn the AC off after the given delay (e.g., 30m, 2h, 1h 30m)")
             .convert { scheduledTimer(Duration.parse(it), Timer.Scheduled::Off) },
@@ -320,6 +327,7 @@ private class SetParametersCommand(
                 defrost = strongDefrost?.let { Defrost(strong = it, onDemand = defrostNow) },
                 wifiLedStatus = wifiLed,
                 schedulerStatus = scheduler,
+                smartSensingStatus = smartSensing,
             ),
         )
     }
