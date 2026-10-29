@@ -3,6 +3,7 @@ package toshibaac.client.types
 public data class FCUState(
     val acStatus: ACStatus?,
     val acMode: ACMode?,
+    /** Without the 8°C offset; when sending it in 8°C heating, [meritAMode] must be set as well. */
     val temperature: TargetTemperature?,
     val fanMode: FanMode?,
     val swingMode: SwingMode?,
@@ -45,7 +46,7 @@ public data class FCUState(
                     0x00.toByte() -> null // TODO: how to represent better?
                     else -> throw IllegalArgumentException("Invalid ACMode byte: ${bytes[1]}")
                 },
-                temperature = Temperature.fromRaw(bytes[2])?.let { TargetTemperature(it) },
+                temperature = Temperature.fromRaw(bytes[2])?.let { TargetTemperature(it.fromHeating8CRaw(bytes[6])) },
                 fanMode = when (bytes[3]) {
                     0x41.toByte() -> FanMode.AUTO
                     0x31.toByte() -> FanMode.QUIET
@@ -139,7 +140,7 @@ public data class FCUState(
                 ACMode.FAN -> 0x45.toByte()
                 null -> 0xff.toByte()
             },
-            temperature?.value.asByte,
+            temperature?.value?.toHeating8CRaw(meritAMode).asByte,
             when (fanMode) {
                 FanMode.AUTO -> 0x41.toByte()
                 FanMode.QUIET -> 0x31.toByte()

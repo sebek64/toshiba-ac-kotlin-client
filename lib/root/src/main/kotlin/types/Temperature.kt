@@ -17,6 +17,20 @@ public value class Temperature(public val value: Int) {
     }
 }
 
+private const val HEATING_8C_OFFSET = 16
+
+/** With merit A [MeritAMode.HEATING_8C], the AC transfers the target temperature offset by 16. */
+internal fun Temperature.fromHeating8CRaw(meritByte: Byte): Temperature = if ((meritByte.toInt() and 0x0F) == 0x04 && value > HEATING_8C_OFFSET) {
+    Temperature(value - HEATING_8C_OFFSET)
+} else {
+    this
+}
+
+internal fun Temperature.toHeating8CRaw(meritAMode: MeritAMode?): Temperature = when (meritAMode) {
+    MeritAMode.HEATING_8C -> Temperature(value + HEATING_8C_OFFSET)
+    else -> this
+}
+
 internal val Temperature?.asByte
     get() = when (this) {
         null -> 0xff.toByte()

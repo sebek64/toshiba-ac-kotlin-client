@@ -35,7 +35,7 @@ public data class ProgramEntry(
                     0x00.toByte() -> null // TODO: how to represent better?
                     else -> throw IllegalArgumentException("Invalid ACMode byte: ${bytes[1]}")
                 },
-                temperature = Temperature.fromRaw(bytes[4])?.let { TargetTemperature(it) },
+                temperature = Temperature.fromRaw(bytes[4])?.let { TargetTemperature(it.fromHeating8CRaw(bytes[6])) },
                 fanMode = when (bytes[5]) {
                     0x41.toByte() -> FanMode.AUTO
                     0x31.toByte() -> FanMode.QUIET
@@ -103,7 +103,7 @@ public data class ProgramEntry(
                 ACMode.FAN -> 0x45.toByte()
                 null -> 0xff.toByte()
             },
-            temperature?.value.asByte,
+            temperature?.value?.toHeating8CRaw(meritAMode).asByte,
             when (fanMode) {
                 FanMode.AUTO -> 0x41.toByte()
                 FanMode.QUIET -> 0x31.toByte()
